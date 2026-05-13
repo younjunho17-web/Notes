@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ko" class="yj-page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breast Cancer Subtypes — Pathology Prep</title>
+  <style>
+    /* === YJ TOKENS === */
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter+Tight:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --paper:        #F7F4ED;
+      --paper-raised: #FBF9F3;
+      --paper-sunken: #EFEBE2;
+      --paper-edge:   #EDE8DB;
+      --vellum:       #FCFBF8;
+      --ink:          #1C1C1C;
+      --ink-2:        #3D3D3B;
+      --ink-3:        #5F5F5D;
+      --ink-4:        #9C9C97;
+      --ink-5:        #C9C9C4;
+      --ink-a83:      rgba(28,28,28,0.83);
+      --ink-a40:      rgba(28,28,28,0.40);
+      --ink-a10:      rgba(28,28,28,0.10);
+      --ink-a04:      rgba(28,28,28,0.04);
+      --line:         #ECEAE4;
+      --line-soft:    #F0EEE9;
+      --line-strong:  rgba(28,28,28,0.40);
+      --moss:         #6B7A52;
+      --moss-tint:    #DDE3CE;
+      --moss-deep:    #4F5C3C;
+      --clay:         #B8674A;
+      --clay-tint:    #F0DAC9;
+      --clay-deep:    #8E4A30;
+      --lilac:        #8C7BA6;
+      --lilac-tint:   #E4DDED;
+      --lilac-deep:   #685A82;
+      --highlight-yellow: #F1E2A3;
+      --highlight-moss:   #CFD8B8;
+      --highlight-lilac:  #DCD2EA;
+      --highlight-clay:   #EFCDB8;
+      --success:      #5F7A4C;
+      --success-tint: #DCE5CF;
+      --danger:       #A24A3A;
+      --danger-tint:  #F1D6CD;
+      --font-serif:   "Source Serif 4", Georgia, serif;
+      --font-sans:    "Inter Tight", -apple-system, sans-serif;
+      --font-mono:    "JetBrains Mono", monospace;
+      --shadow-1:     0 1px 0 rgba(28,28,28,0.04);
+      --shadow-2:     0 1px 2px rgba(28,28,28,0.05), 0 0 0 1px rgba(28,28,28,0.04);
+      --shadow-pop:   0 8px 28px -12px rgba(28,28,28,0.18), 0 0 0 1px rgba(28,28,28,0.06);
+      --shadow-inset-press: rgba(255,255,255,0.20) 0 0.5px 0 0 inset, rgba(0,0,0,0.20) 0 0 0 0.5px inset, rgba(0,0,0,0.05) 0 1px 2px 0;
+      --r-1: 4px; --r-2: 6px; --r-3: 10px; --r-4: 14px; --r-pill: 999px;
+      --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-7:32px; --s-8:40px; --s-9:56px;
+      --ease-quiet: cubic-bezier(0.32, 0.72, 0.24, 1);
+      --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "ss01","cv11";
+    }
+    ::selection { background: var(--moss-tint); color: var(--ink); }
+
+    /* === LAYOUT === */
+    .deck {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    /* === NAV BAR === */
+    .nav {
+      height: 56px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--s-7);
+      gap: var(--s-6);
+      flex-shrink: 0;
+    }
+    .nav-title {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--ink);
+      flex: 1;
+    }
+    .nav-counter {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--ink-3);
+      font-feature-settings: "tnum";
+    }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-2);
+      padding: 5px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background var(--dur-1) var(--ease-quiet);
+    }
+    .nav-btn:hover { background: var(--ink-a04); }
+    .nav-btn:active { opacity: 0.8; }
+    .nav-btn:disabled { color: var(--ink-4); border-color: var(--line); cursor: default; }
+
+    /* === PROGRESS === */
+    .progress-bar {
+      height: 2px;
+      background: var(--line);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--moss);
+      transition: width var(--dur-3) var(--ease-quiet);
+    }
+
+    /* === SLIDE AREA === */
+    .slides-wrapper {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: var(--s-8) var(--s-9);
+      display: none;
+      flex-direction: column;
+      gap: var(--s-6);
+      overflow-y: auto;
+    }
+    .slide.active { display: flex; }
+
+    /* === SLIDE HEADER === */
+    .slide-eyebrow {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 520;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .slide-title {
+      font-family: var(--font-serif);
+      font-size: 36px;
+      font-weight: 400;
+      line-height: 1.12;
+      letter-spacing: -0.016em;
+      color: var(--ink);
+    }
+    .slide-subtitle {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--ink-3);
+      font-weight: 440;
+    }
+
+    /* === CONTENT GRID === */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-5);
+      flex: 1;
+    }
+    .content-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+    .content-grid.full { grid-template-columns: 1fr; }
+
+    /* === INFO CARDS === */
+    .info-card {
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: var(--r-3);
+      box-shadow: var(--shadow-1);
+      padding: var(--s-5) var(--s-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-3);
+    }
+    .info-card-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 520;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .info-card-body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--ink-2);
+    }
+
+    /* === ACCENT CARD VARIANTS === */
+    .card-moss { border-left: 3px solid var(--moss); background: var(--paper-raised); }
+    .card-clay  { border-left: 3px solid var(--clay); background: var(--paper-raised); }
+    .card-lilac { border-left: 3px solid var(--lilac); background: var(--paper-raised); }
+
+    /* === KEYWORDS === */
+    .keyword-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+    }
+    .keyword {
+      background: var(--paper-sunken);
+      border: 1px solid var(--line);
+      border-radius: var(--r-1);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-2);
+      padding: 2px 8px;
+    }
+    .keyword.red { background: var(--danger-tint); border-color: rgba(162,74,58,0.25); color: var(--danger); }
+    .keyword.moss { background: var(--moss-tint); border-color: rgba(107,122,82,0.25); color: var(--moss-deep); }
+    .keyword.lilac { background: var(--lilac-tint); border-color: rgba(140,123,166,0.25); color: var(--lilac-deep); }
+    .keyword.clay { background: var(--clay-tint); border-color: rgba(184,103,74,0.25); color: var(--clay-deep); }
+    .keyword.yellow { background: var(--highlight-yellow); border-color: rgba(180,150,60,0.25); color: #7A6530; }
+
+    /* === HIGHLIGHT === */
+    mark.yj { background: var(--highlight-yellow); color: var(--ink); padding: 0 2px; border-radius: 2px; }
+    mark.moss { background: var(--highlight-moss); color: var(--ink); padding: 0 2px; border-radius: 2px; }
+    mark.clay { background: var(--highlight-clay); color: var(--ink); padding: 0 2px; border-radius: 2px; }
+    mark.lilac { background: var(--highlight-lilac); color: var(--ink); padding: 0 2px; border-radius: 2px; }
+
+    /* === COMPARISON ROW === */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--r-3);
+      overflow: hidden;
+    }
+    .compare-col {
+      padding: var(--s-5) var(--s-6);
+      background: var(--paper-raised);
+    }
+    .compare-col:first-child { border-right: 1px solid var(--line); }
+    .compare-col-head {
+      font-size: 11px;
+      font-weight: 520;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: var(--s-3);
+    }
+
+    /* === RISK BADGE === */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--paper-sunken);
+      border: 1px solid var(--line);
+      border-radius: var(--r-2);
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+    .risk-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .dot-low  { background: var(--moss); }
+    .dot-med  { background: #C4A84A; }
+    .dot-high { background: var(--clay); }
+    .dot-vhigh{ background: var(--danger); }
+
+    /* === EXTERNAL LINK === */
+    .ext-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      font-size: 13px;
+      color: var(--moss);
+      text-decoration: underline;
+      text-decoration-color: rgba(107,122,82,0.4);
+      text-underline-offset: 2px;
+      font-weight: 440;
+    }
+    .ext-link:hover { color: var(--moss-deep); text-decoration-color: var(--moss-deep); }
+
+    /* === DIVIDER === */
+    hr.yj { border: none; border-top: 1px solid var(--line-soft); margin: var(--s-3) 0; }
+
+    /* === TITLE SLIDE === */
+    .title-slide-inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100%;
+      gap: var(--s-5);
+      max-width: 680px;
+    }
+    .title-slide-inner h1 {
+      font-family: var(--font-serif);
+      font-size: 52px;
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      font-weight: 380;
+      color: var(--ink);
+    }
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-2) var(--s-4);
+      margin-top: var(--s-2);
+    }
+    .index-item {
+      font-size: 13px;
+      color: var(--ink-3);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .index-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-4);
+      width: 16px;
+    }
+
+    /* === BOTTOM TOOLBAR === */
+    .toolbar {
+      height: 52px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--s-4);
+      flex-shrink: 0;
+    }
+    .toolbar-btn {
+      background: var(--ink);
+      color: var(--vellum);
+      border: none;
+      border-radius: var(--r-2);
+      padding: 7px 20px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 520;
+      cursor: pointer;
+      box-shadow: var(--shadow-inset-press);
+      transition: background var(--dur-1) var(--ease-quiet);
+    }
+    .toolbar-btn:hover { background: var(--ink-2); }
+    .toolbar-btn:active { opacity: 0.8; }
+    .toolbar-btn:disabled { background: var(--ink-4); cursor: default; }
+    .toolbar-btn.secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line-strong);
+      box-shadow: none;
+    }
+    .toolbar-btn.secondary:hover { background: var(--ink-a04); }
+
+    /* === LIST === */
+    ul.yj-list { list-style: none; display: flex; flex-direction: column; gap: var(--s-2); }
+    ul.yj-list li {
+      font-size: 14px; color: var(--ink-2); line-height: 1.5;
+      padding-left: var(--s-4); position: relative;
+    }
+    ul.yj-list li::before {
+      content: "·"; position: absolute; left: 4px; color: var(--ink-4);
+    }
+
+    /* === SUBTYPE TAG === */
+    .subtype-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: var(--r-1);
+      font-size: 11px;
+      font-weight: 540;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tag-dcis  { background: var(--lilac-tint); color: var(--lilac-deep); }
+    .tag-lcis  { background: var(--highlight-yellow); color: #7A6530; }
+    .tag-idc   { background: var(--clay-tint); color: var(--clay-deep); }
+    .tag-ilc   { background: var(--moss-tint); color: var(--moss-deep); }
+    .tag-inf   { background: var(--danger-tint); color: var(--danger); }
+    .tag-med   { background: var(--paper-sunken); color: var(--ink-3); }
+    .tag-muc   { background: var(--highlight-moss); color: #3F5028; }
+    .tag-tub   { background: var(--success-tint); color: var(--success); }
+    .tag-paget { background: var(--highlight-clay); color: var(--clay-deep); }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 700px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .compare-row { grid-template-columns: 1fr; }
+      .compare-col:first-child { border-right: none; border-bottom: 1px solid var(--line); }
+      .slide { padding: var(--s-6) var(--s-5); }
+      .title-slide-inner h1 { font-size: 36px; }
+      .index-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body class="yj-page">
+
+<div class="deck">
+  <!-- NAV -->
+  <nav class="nav">
+    <span class="nav-title">Breast Pathology — Subtype Cards</span>
+    <span class="nav-counter" id="counter">1 / 10</span>
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Prev</button>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+  </nav>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:10%"></div>
+  </div>
+
+  <!-- ========================= SLIDE 0: TITLE ========================= -->
+  <div class="slides-wrapper">
+
+    <div class="slide active" id="slide-0">
+      <div class="title-slide-inner">
+        <span class="slide-eyebrow">병리학 · 유방 병리 실습 예습</span>
+        <h1>Breast Cancer<br>Subtypes</h1>
+        <p style="font-size:16px; color:var(--ink-2); max-width:52ch; line-height:1.6;">
+          각 subtype의 핵심 키워드, 강의록 포인트, 형태학적 특징, 분자 분류를 카드 한 장에 정리했습니다.
+        </p>
+        <div class="index-grid">
+          <div class="index-item"><span class="index-num">01</span> DCIS</div>
+          <div class="index-item"><span class="index-num">02</span> LCIS</div>
+          <div class="index-item"><span class="index-num">03</span> IDC (NST)</div>
+          <div class="index-item"><span class="index-num">04</span> ILC</div>
+          <div class="index-item"><span class="index-num">05</span> Inflammatory</div>
+          <div class="index-item"><span class="index-num">06</span> Medullary pattern</div>
+          <div class="index-item"><span class="index-num">07</span> Mucinous</div>
+          <div class="index-item"><span class="index-num">08</span> Tubular</div>
+          <div class="index-item"><span class="index-num">09</span> Paget disease</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 1: DCIS ========================= -->
+    <div class="slide" id="slide-1">
+      <div>
+        <span class="slide-eyebrow">01 · in situ carcinoma</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Ductal Carcinoma In Situ</h2>
+          <span class="subtype-tag tag-dcis">DCIS</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          Malignant cells <mark class="moss">confined within ducts by basement membrane</mark> — no metastatic capacity.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <!-- Keywords -->
+        <div class="info-card card-lilac">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">calcification</span>
+            <span class="keyword red">comedo necrosis</span>
+            <span class="keyword">basement membrane intact</span>
+            <span class="keyword">no metastasis</span>
+            <span class="keyword">mammographic detection</span>
+          </div>
+        </div>
+
+        <!-- Morphologic subtypes -->
+        <div class="info-card">
+          <div class="info-card-label">Morphologic Subtypes (강의록)</div>
+          <ul class="yj-list">
+            <li><strong>Comedo:</strong> pleomorphic high-grade nuclei + <mark class="clay">central necrosis</mark> → 석회화</li>
+            <li><strong>Cribriform:</strong> cookie-cutter–like round spaces + calcified secretory material</li>
+            <li><strong>Micropapillary:</strong> bulbous protrusions — fibrovascular core <em>없음</em></li>
+            <li><strong>Papillary:</strong> true papillae with fibrovascular cores — myoepithelial layer <mark class="clay">없음</mark></li>
+          </ul>
+        </div>
+
+        <!-- Pathogenesis -->
+        <div class="info-card card-moss">
+          <div class="info-card-label">Molecular pathway</div>
+          <div class="info-card-body">
+            ER-positive pathway: <strong>BRCA2 germline → 1q gain / 16q loss → PIK3CA mutation → ADH → DCIS → Luminal cancer</strong><br>
+            HER2 pathway: TP53 mutation + HER2 amplification → DCIS (HER2+)<br>
+            TNBC pathway: BRCA1 → TP53 → DCIS (ER−/HER2−)
+          </div>
+        </div>
+
+        <!-- Risk + link -->
+        <div class="info-card">
+          <div class="info-card-label">Risk & 임상</div>
+          <div class="info-card-body" style="margin-bottom:var(--s-3);">
+            Risk of invasive carcinoma: <span class="risk-badge"><span class="risk-dot dot-vhigh"></span> 8–10× (lifetime ~25–30%)</span><br>
+            <br>
+            ADH와의 구분: <mark class="yj">size &gt; 2 mm이면 DCIS로 분류</mark>
+          </div>
+          <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastDCIS.html" target="_blank">pathologyoutlines.com — DCIS ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 2: LCIS ========================= -->
+    <div class="slide" id="slide-2">
+      <div>
+        <span class="slide-eyebrow">02 · in situ carcinoma</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Lobular Carcinoma In Situ</h2>
+          <span class="subtype-tag tag-lcis">LCIS</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          항상 <mark class="yj">incidental finding</mark> — 무증상, 석회화 없음, bilateral risk marker.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-clay">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">no calcification</span>
+            <span class="keyword red">incidental</span>
+            <span class="keyword moss">E-cadherin loss</span>
+            <span class="keyword">bilateral (20–40%)</span>
+            <span class="keyword">multicentric</span>
+            <span class="keyword">ER+, PR+, HER2−</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">형태학적 특징</div>
+          <ul class="yj-list">
+            <li>Monomorphic small, round, <mark class="clay">loosely cohesive</mark> cells</li>
+            <li>Oval or round nuclei, small nucleoli</li>
+            <li>Acini를 <strong>50% 미만</strong> 채울 때 ALH — 50% 이상 채울 때 LCIS</li>
+            <li>E-cadherin IHC: LCIS cells — <mark class="clay">음성</mark>, 정상 luminal cells — 양성</li>
+            <li>Pagetoid spread: 인접 duct로 spreading</li>
+          </ul>
+        </div>
+
+        <div class="info-card card-moss">
+          <div class="info-card-label">DCIS vs LCIS 비교</div>
+          <div class="compare-row" style="margin-top:var(--s-2);">
+            <div class="compare-col">
+              <div class="compare-col-head">DCIS</div>
+              <ul class="yj-list">
+                <li>Calcification 흔함</li>
+                <li>Palpable or mammographic</li>
+                <li>E-cadherin 양성</li>
+                <li>Surgical margin 중요</li>
+              </ul>
+            </div>
+            <div class="compare-col">
+              <div class="compare-col-head">LCIS</div>
+              <ul class="yj-list">
+                <li>Calcification 없음</li>
+                <li>항상 incidental</li>
+                <li><mark class="clay">E-cadherin 음성</mark></li>
+                <li>Risk marker로 관리</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Risk & 임상</div>
+          <div class="info-card-body" style="margin-bottom:var(--s-3);">
+            <span class="risk-badge"><span class="risk-dot dot-vhigh"></span> 8–10× (lifetime ~25–30%)</span><br><br>
+            양측성 risk — ipsilateral &amp; contralateral 모두 상승<br>
+            수술적 절제가 risk를 낮추는지는 <mark class="yj">불명확 (강의록)</mark>
+          </div>
+          <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastLCIS.html" target="_blank">pathologyoutlines.com — LCIS ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 3: IDC ========================= -->
+    <div class="slide" id="slide-3">
+      <div>
+        <span class="slide-eyebrow">03 · invasive carcinoma · most common</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Invasive Ductal Carcinoma (NST)</h2>
+          <span class="subtype-tag tag-idc">IDC / NST</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          "No special type" — invasive carcinoma의 대다수. <mark class="clay">Desmoplastic stroma + spiculated margin</mark>.
+        </p>
+      </div>
+
+      <div class="content-grid three-col">
+        <div class="info-card card-clay">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">desmoplasia</span>
+            <span class="keyword red">hard / spiculated</span>
+            <span class="keyword">ill-defined border</span>
+            <span class="keyword">firm to hard</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Grade (Nottingham)</div>
+          <ul class="yj-list">
+            <li><strong>3 criteria:</strong> tubule formation, nuclear pleomorphism, mitotic count</li>
+            <li>Grade 1: 5-yr survival ~85%</li>
+            <li>Grade 2: ~60%</li>
+            <li>Grade 3: ~15%</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">분자 분류</div>
+          <ul class="yj-list">
+            <li><mark class="moss">Luminal A:</mark> ER+, HER2−, low Ki-67</li>
+            <li><mark class="moss">Luminal B:</mark> ER+, HER2−, high Ki-67 <em>or</em> HER2+</li>
+            <li><mark class="lilac">HER2:</mark> HER2+ (ER± )</li>
+            <li><mark class="clay">TNBC:</mark> ER−, PR−, HER2−</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-moss">
+          <div class="info-card-label">Target therapy 연결 (강의록 Table 23.7)</div>
+          <ul class="yj-list">
+            <li><strong>ER+:</strong> tamoxifen, aromatase inhibitor, fulvestrant, CDK4/6i (palbociclib)</li>
+            <li><strong>HER2+:</strong> trastuzumab (HERCEPTIN), TKI — 17q21 amplification 감지 by FISH</li>
+            <li><strong>BRCA1/2:</strong> PARP inhibitor, platinum agents</li>
+            <li><strong>TNBC:</strong> PD-L1 checkpoint inhibitor (under investigation)</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Hazard pattern (강의록 그래프)</div>
+          <div class="info-card-body">
+            <strong>TNBC:</strong> early peak (~1.5 yr), rapid decline → <mark class="clay">early recurrence</mark><br>
+            <strong>HER2:</strong> bimodal peak (~2 yr, ~7 yr)<br>
+            <strong>Luminal:</strong> flat, sustained long-term risk — <mark class="moss">late recurrence 주의</mark>
+          </div>
+          <div style="margin-top:var(--s-3);">
+            <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastinvasiveductal.html" target="_blank">pathologyoutlines.com — IDC ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 4: ILC ========================= -->
+    <div class="slide" id="slide-4">
+      <div>
+        <span class="slide-eyebrow">04 · invasive carcinoma · special type</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Invasive Lobular Carcinoma</h2>
+          <span class="subtype-tag tag-ilc">ILC</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          <mark class="moss">E-cadherin 소실 → dyscohesive → single-file infiltration</mark> — 촉진·영상 모두 어렵다.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-moss">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">single-file</span>
+            <span class="keyword red">bilateral</span>
+            <span class="keyword moss">E-cadherin loss</span>
+            <span class="keyword">dyscohesive</span>
+            <span class="keyword">no desmoplasia (often)</span>
+            <span class="keyword">ER+, HER2−</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">형태학적 특징</div>
+          <ul class="yj-list">
+            <li>Indian-file / targetoid pattern: stroma를 single file로 infiltrate</li>
+            <li>Desmoplastic response가 약해 <mark class="yj">palpation + imaging 모두 어려움</mark></li>
+            <li>Intracytoplasmic lumina (signet ring–like)</li>
+            <li>CDH1 germline mutation → 유전성 lobular carcinoma (gastric signet ring도 동반)</li>
+          </ul>
+        </div>
+
+        <div class="info-card card-clay">
+          <div class="info-card-label">LCIS와의 연속성</div>
+          <div class="info-card-body">
+            LCIS → ILC: 동일한 E-cadherin 소실 기전.<br>
+            ILC는 LCIS와 함께 발견되는 경우 많음.<br>
+            <mark class="clay">Bilateral & multicentric incidence 높음</mark> — contralateral breast 주의.
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">IHC 패턴 (강의록 사진)</div>
+          <ul class="yj-list">
+            <li>E-cadherin IHC: <mark class="clay">음성</mark> (반면 IDC는 양성)</li>
+            <li>ER: 핵 강양성</li>
+            <li>HER2: 대부분 음성</li>
+          </ul>
+          <div style="margin-top:var(--s-3);">
+            <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastinvasivelobular.html" target="_blank">pathologyoutlines.com — ILC ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 5: INFLAMMATORY ========================= -->
+    <div class="slide" id="slide-5">
+      <div>
+        <span class="slide-eyebrow">05 · clinical syndrome · T4d</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Inflammatory Breast Carcinoma</h2>
+          <span class="subtype-tag tag-inf">Inflammatory</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          실제 염증이 아님 — <mark class="clay">dermal lymphatic obstruction</mark>에 의한 clinical presentation.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-clay">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">peau d'orange</span>
+            <span class="keyword red">dermal lymphatics</span>
+            <span class="keyword clay">T4d staging</span>
+            <span class="keyword">erythema + edema</span>
+            <span class="keyword">no discrete mass</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">병태생리</div>
+          <ul class="yj-list">
+            <li>종양 세포가 <mark class="clay">dermal lymphovascular spaces</mark>를 막아 림프 울혈</li>
+            <li>피부 edema → Cooper's ligament tethering → <strong>peau d'orange</strong> (orange-peel skin)</li>
+            <li>실제 염증세포 침윤은 <em>없거나 적음</em></li>
+            <li>강의록: inflammatory breast cancer는 <mark class="yj">erythematous swollen breast에서 항상 고려</mark></li>
+          </ul>
+        </div>
+
+        <div class="info-card card-moss">
+          <div class="info-card-label">AJCC Staging (강의록 T4d)</div>
+          <div class="info-card-body">
+            <strong>T4d = Inflammatory carcinoma</strong><br>
+            T4a: chest wall extension<br>
+            T4b: skin edema/ulceration, satellite nodules<br>
+            T4c: both T4a + T4b<br>
+            T4d: inflammatory carcinoma — <mark class="clay">별도 카테고리</mark>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">감별 / 임상 요점</div>
+          <ul class="yj-list">
+            <li>Mastitis와 감별 중요 — antibiotic에 반응 없으면 biopsy</li>
+            <li>Rapidly progressive, poor prognosis</li>
+            <li>Skin punch biopsy로 dermal lymphatic tumor emboli 확인</li>
+          </ul>
+          <div style="margin-top:var(--s-3);">
+            <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastinflammatorycarcinoma.html" target="_blank">pathologyoutlines.com — Inflammatory ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 6: MEDULLARY ========================= -->
+    <div class="slide" id="slide-6">
+      <div>
+        <span class="slide-eyebrow">06 · special type · TNBC</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Carcinoma with Medullary Pattern</h2>
+          <span class="subtype-tag tag-med">Medullary</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          <mark class="moss">BRCA1-associated TNBC</mark> — 역설적으로 dense lymphocytic infiltrate가 있어 <em>softer</em> on palpation.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-lilac">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">lymphocytes</span>
+            <span class="keyword red">pushing border</span>
+            <span class="keyword">BRCA1</span>
+            <span class="keyword">TNBC</span>
+            <span class="keyword">softer mass</span>
+            <span class="keyword">pleomorphic nuclei</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">4대 형태학적 기준 (강의록)</div>
+          <ul class="yj-list">
+            <li>Solid sheets of large cells — pleomorphic nuclei + prominent nucleoli</li>
+            <li>Frequent mitotic figures</li>
+            <li><mark class="yj">Moderate to marked lymphoplasmacytic infiltrate</mark> (surrounding + within)</li>
+            <li><mark class="moss">Pushing (non-infiltrative) border</mark> — 경계 밀어내는 형태</li>
+          </ul>
+        </div>
+
+        <div class="info-card card-moss">
+          <div class="info-card-label">역설적 포인트</div>
+          <div class="info-card-body">
+            High-grade histology임에도 <strong>better prognosis</strong> than grade-matched IDC.<br><br>
+            기전: dense TIL (tumor-infiltrating lymphocytes) → immune-mediated killing<br><br>
+            BRCA1 inactivation → ER−/HER2− → <mark class="moss">TNBC pathway</mark> (강의록 Fig 23.14 blue arrow)
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">TNBC 임상 특성</div>
+          <ul class="yj-list">
+            <li>Early metastasis hazard peak (~1.5 yr) then rapid decline</li>
+            <li>No hormonal or HER2 targeted therapy</li>
+            <li>Platinum agents + PARP inhibitor (BRCA1 mutation)</li>
+            <li>Checkpoint inhibitor (PD-L1) — under investigation</li>
+          </ul>
+          <div style="margin-top:var(--s-3);">
+            <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastmedullary.html" target="_blank">pathologyoutlines.com — Medullary ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 7: MUCINOUS ========================= -->
+    <div class="slide" id="slide-7">
+      <div>
+        <span class="slide-eyebrow">07 · special type · Luminal</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Mucinous Carcinoma</h2>
+          <span class="subtype-tag tag-muc">Mucinous</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          Extracellular <mark class="moss">mucin pools</mark>에 떠 있는 tumor cell clusters — Luminal, favorable prognosis.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-moss">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">mucin pools</span>
+            <span class="keyword moss">ER+, HER2−</span>
+            <span class="keyword">Luminal</span>
+            <span class="keyword">gelatinous gross</span>
+            <span class="keyword">good prognosis</span>
+            <span class="keyword">older women</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">형태학적 특징</div>
+          <ul class="yj-list">
+            <li>Large pools of extracellular mucin containing <mark class="moss">floating tumor cell clusters</mark></li>
+            <li>Gross: gelatinous, well-circumscribed, soft</li>
+            <li>Pure type → very favorable; mixed type → intermediate</li>
+            <li>강의록 Fig 23.22(B): mucinous background에 떠있는 세포군 확인</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Luminal 계열 special types 비교</div>
+          <ul class="yj-list">
+            <li><strong>Mucinous:</strong> mucin pools, ER+, soft, good Px</li>
+            <li><strong>Tubular:</strong> well-formed angulated tubules, excellent Px</li>
+            <li><strong>Papillary:</strong> papillary structures, ER+</li>
+            <li><strong>Lobular:</strong> E-cadherin−, single-file, ER+</li>
+          </ul>
+          <div style="margin-top: var(--s-3); font-size:13px; color:var(--ink-3);">
+            강의록: Special types → <mark class="yj">60% 30-year survival</mark> vs 20% no special type
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Prognosis context</div>
+          <div class="info-card-body" style="margin-bottom:var(--s-3);">
+            <span class="risk-badge"><span class="risk-dot dot-low"></span> favorable</span><br><br>
+            ER+ → hormonal therapy에 반응<br>
+            Distant metastasis hazard: luminal curve는 flat, sustained — late recurrence 모니터링 필요
+          </div>
+          <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastmucinous.html" target="_blank">pathologyoutlines.com — Mucinous ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 8: TUBULAR ========================= -->
+    <div class="slide" id="slide-8">
+      <div>
+        <span class="slide-eyebrow">08 · special type · Luminal · best prognosis</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Tubular Carcinoma</h2>
+          <span class="subtype-tag tag-tub">Tubular</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          Well-formed angulated tubules — 최고의 예후를 가진 invasive carcinoma.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-moss">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">well-formed tubules</span>
+            <span class="keyword red">good prognosis</span>
+            <span class="keyword moss">ER+, HER2−</span>
+            <span class="keyword">angulated</span>
+            <span class="keyword">open lumens</span>
+            <span class="keyword">low grade</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">형태학적 특징</div>
+          <ul class="yj-list">
+            <li>Well-differentiated angulated tubular structures with open lumens</li>
+            <li>Single layer of cells — myoepithelial layer <mark class="yj">없음</mark> (invasive이므로)</li>
+            <li>Low nuclear grade, minimal mitoses</li>
+            <li>&gt;90% tubule formation → pure tubular; &lt;90% → mixed</li>
+            <li>강의록 Fig 23.22(C) 참조</li>
+          </ul>
+        </div>
+
+        <div class="info-card card-lilac">
+          <div class="info-card-label">vs. Sclerosing Adenosis 감별</div>
+          <div class="info-card-body">
+            <strong>Sclerosing adenosis:</strong> myoepithelial cells 있음, lobular architecture 유지, <mark class="lilac">benign</mark><br><br>
+            <strong>Tubular carcinoma:</strong> myoepithelial cells 없음, irregular angulated tubules, <mark class="clay">invasive</mark><br><br>
+            IHC: p63 or smooth muscle actin → myoepithelial 감지
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">Prognosis</div>
+          <div class="info-card-body" style="margin-bottom: var(--s-3);">
+            <span class="risk-badge"><span class="risk-dot dot-low"></span> excellent — strongly correlated with favorable survival (강의록 Table 23.5)</span><br><br>
+            Luminal A pathway, ER+ → tamoxifen / aromatase inhibitor<br>
+            Lymph node 전이 적음
+          </div>
+          <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breasttubular.html" target="_blank">pathologyoutlines.com — Tubular ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= SLIDE 9: PAGET ========================= -->
+    <div class="slide" id="slide-9">
+      <div>
+        <span class="slide-eyebrow">09 · nipple / in situ extension</span>
+        <div style="display:flex; align-items:baseline; gap:var(--s-4); flex-wrap:wrap; margin-top:var(--s-2);">
+          <h2 class="slide-title">Paget Disease of the Nipple</h2>
+          <span class="subtype-tag tag-paget">Paget</span>
+        </div>
+        <p class="slide-subtitle" style="margin-top:var(--s-2);">
+          DCIS가 lactiferous sinus → nipple skin으로 <mark class="clay">basement membrane 미통과</mark>하며 확장.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <div class="info-card card-clay">
+          <div class="info-card-label">핵심 키워드</div>
+          <div class="keyword-list">
+            <span class="keyword red">eczematous nipple</span>
+            <span class="keyword red">Paget cells in epidermis</span>
+            <span class="keyword clay">DCIS origin</span>
+            <span class="keyword">lactiferous sinus</span>
+            <span class="keyword">basement membrane intact</span>
+            <span class="keyword">oozing scaly crust</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">경로 (강의록 Fig 23.18)</div>
+          <ul class="yj-list">
+            <li>DCIS (ductal system) → <mark class="clay">lactiferous sinus</mark> → nipple epidermis로 propagation</li>
+            <li>Basement membrane은 <mark class="yj">통과하지 않음</mark> — in situ</li>
+            <li>Paget cells: large, pale, vacuolated cells within squamous epithelium</li>
+            <li>Disrupts tight squamous barrier → extracellular fluid seeps out → oozing scaly crust</li>
+          </ul>
+        </div>
+
+        <div class="info-card card-moss">
+          <div class="info-card-label">임상적 포인트</div>
+          <ul class="yj-list">
+            <li>유두의 <mark class="moss">습진 모양 병변</mark> (erythema, scaling, crusting)</li>
+            <li>거의 항상 underlying DCIS or invasive carcinoma 동반</li>
+            <li>Paget disease of nipple ≠ underlying invasive carcinoma → staging은 underlying tumor 기준</li>
+            <li>AJCC 8th: Tis(Paget)로 분류 — 단, underlying tumor 있으면 그 tumor size 기준</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-label">감별 / IHC</div>
+          <ul class="yj-list">
+            <li>Melanoma in situ, Toker cells와 감별</li>
+            <li>Paget cells: <mark class="yj">CK7+, HER2+, ER±</mark></li>
+            <li>Melanoma: S100+, HMB45+</li>
+            <li>PAS+: intracytoplasmic mucin in Paget cells</li>
+          </ul>
+          <div style="margin-top:var(--s-3);">
+            <a class="ext-link" href="https://www.pathologyoutlines.com/topic/breastPagetdisease.html" target="_blank">pathologyoutlines.com — Paget ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /slides-wrapper -->
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <button class="toolbar-btn secondary" id="prevBtn2" onclick="changeSlide(-1)" disabled>← Previous</button>
+    <button class="toolbar-btn" id="nextBtn2" onclick="changeSlide(1)">Next card →</button>
+  </div>
+</div>
+
+<script>
+  let current = 0;
+  const total = 10; // slides 0–9
+
+  function changeSlide(dir) {
+    document.getElementById('slide-' + current).classList.remove('active');
+    current = Math.max(0, Math.min(total - 1, current + dir));
+    document.getElementById('slide-' + current).classList.add('active');
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('progressFill').style.width = ((current + 1) / total * 100) + '%';
+    const atStart = current === 0;
+    const atEnd   = current === total - 1;
+    document.getElementById('prevBtn').disabled  = atStart;
+    document.getElementById('prevBtn2').disabled = atStart;
+    document.getElementById('nextBtn').disabled  = atEnd;
+    document.getElementById('nextBtn2').disabled = atEnd;
+    document.getElementById('nextBtn2').textContent  = atEnd ? 'End' : 'Next card →';
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

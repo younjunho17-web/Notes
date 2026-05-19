@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<!--
+================================================================
+  Quiz Module Template (YJ Design)
+================================================================
+
+  과목 중립적인 객관식 문제풀이 모듈입니다.
+  파일 하단의 [quizData script 블록] (id="quizData")의
+  MD 내용만 갈아끼우면 어떤 과목이든 작동합니다.
+
+  ────────────────────────────────────────────────────────────
+  MD 작성 규칙
+  ────────────────────────────────────────────────────────────
+
+  최상위 구조:
+
+      # <문서 제목>           ← 표시 안 됨. 기록용
+      
+      ## SECTION: <자유 라벨> ← 옵션. 있으면 상단 필터 핀으로 노출
+      
+      ---
+      
+      ### ID: <문항 ID>       ← 필수
+      ### TAGS: <태그1 / 태그2 / 태그3>   ← 옵션. 카드 우상단에 표시
+      ### FLAGS: <플래그>     ← 옵션. 'highlight' 시 점선 테두리로 강조
+      
+      **Q.** <문제 본문>
+      
+      - **A1.** <선지1>
+      - **A2.** <선지2>
+      - **A3.** <선지3>
+      - **A4.** <선지4>
+      - **A5.** <선지5>     ← 선지는 2~5개까지 가능
+      
+      **ANSWER:** A<n>      ← 정답 번호 (필수)
+      
+      **EXPLANATION:**
+      **[<라벨1>]** <본문>
+      
+      **[<라벨2>]** <본문>
+      
+  ────────────────────────────────────────────────────────────
+  해설 라벨 동작
+  ────────────────────────────────────────────────────────────
+  
+      해설 본문은 **[라벨]** 패턴으로 블록을 나눠요.
+      라벨에 '오답', '함정', '매력' 같은 단어가 들어가면
+      자동으로 점토색(clay) 강조, 그 외에는 이끼색(moss) 강조.
+      
+      과목별 자유 라벨 사용 예:
+      - **[핵심 논리]** ... **[오답 제거]** ...
+      - **[정답 근거]** ... **[흔한 함정]** ...
+      - **[원리]** ... **[적용]** ...
+      
+  ────────────────────────────────────────────────────────────
+  SECTION 구분
+  ────────────────────────────────────────────────────────────
+  
+      ## SECTION: 한 줄에 자유 라벨 작성
+      
+      섹션을 안 쓰는 과목은 ## SECTION 줄을 생략하면 됨.
+      이 경우 필터 핀이 자동으로 숨겨지고 전체 문제가 한 흐름으로
+      표시됩니다.
+      
+  ────────────────────────────────────────────────────────────
+  텍스트 강조
+  ────────────────────────────────────────────────────────────
+  
+      **볼드**  → 강조 (배경 하이라이트)
+      *이탤릭*  → 사용 비권장. 글로벌 normal 스타일 적용.
+      | a | b | → 표
+      
+================================================================
+-->
+<html lang="ko" class="yj-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<style>
+/* ============================================================
+   YJ Design Tokens
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter+Tight:wght@300..700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+KR:wght@300..700&family=Noto+Sans+KR:wght@300..700&display=swap');
+
+:root {
+  --paper:        #F7F4ED;
+  --paper-raised: #FBF9F3;
+  --paper-sunken: #EFEBE2;
+  --paper-edge:   #EDE8DB;
+  --vellum:       #FCFBF8;
+
+  --ink:        #1C1C1C;
+  --ink-2:      #3D3D3B;
+  --ink-3:      #5F5F5D;
+  --ink-4:      #9C9C97;
+  --ink-5:      #C9C9C4;
+
+  --ink-a40:    rgba(28, 28, 28, 0.40);
+  --ink-a10:    rgba(28, 28, 28, 0.10);
+  --ink-a04:    rgba(28, 28, 28, 0.04);
+
+  --line:       #ECEAE4;
+  --line-soft:  #F0EEE9;
+  --line-strong:rgba(28, 28, 28, 0.40);
+
+  --moss:       #6B7A52;
+  --moss-tint:  #DDE3CE;
+  --moss-deep:  #4F5C3C;
+
+  --clay:       #B8674A;
+  --clay-tint:  #F0DAC9;
+  --clay-deep:  #8E4A30;
+
+  --lilac:      #8C7BA6;
+  --lilac-tint: #E4DDED;
+  --lilac-deep: #685A82;
+
+  --success:    #5F7A4C;
+  --success-tint:#DCE5CF;
+  --danger:     #A24A3A;
+  --danger-tint:#F1D6CD;
+
+  --highlight-yellow: #F1E2A3;
+
+  --font-serif: "Source Serif 4", "Noto Serif KR", Georgia, serif;
+  --font-sans:  "Inter Tight", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+  /* 타이포 — 한 단계 축소된 스케일 */
+  --fs-display: 32px;  --lh-display: 1.16;
+  --fs-h1:      26px;  --lh-h1:      1.20;
+  --fs-h2:      20px;  --lh-h2:      1.30;
+  --fs-h3:      17px;  --lh-h3:      1.35;
+  --fs-body-lg: 16px;  --lh-body-lg: 1.60;
+  --fs-body:    15px;  --lh-body:    1.58;
+  --fs-body-sm: 13px;  --lh-body-sm: 1.50;
+  --fs-caption: 12px;  --lh-caption: 1.45;
+  --fs-micro:   10.5px; --lh-micro:  1.40;
+
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px;
+  --s-9: 56px; --s-10: 72px;
+
+  --r-1: 4px; --r-2: 6px; --r-3: 10px; --r-4: 14px; --r-pill: 999px;
+
+  --shadow-1: 0 1px 0 rgba(28, 28, 28, 0.04);
+  --shadow-inset-press:
+    rgba(255, 255, 255, 0.20) 0 0.5px 0 0 inset,
+    rgba(0, 0, 0, 0.20) 0 0 0 0.5px inset,
+    rgba(0, 0, 0, 0.05) 0 1px 2px 0;
+  --shadow-focus: 0 4px 12px rgba(0, 0, 0, 0.10);
+
+  --ease-quiet: cubic-bezier(0.32, 0.72, 0.24, 1);
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms;
+}
+
+/* ============================================================
+   Base — 이탤릭은 강조 효과 없이 일반 표시
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::selection { background: var(--moss-tint); color: var(--ink); }
+h1, h2, h3, h4, p { margin: 0; }
+button { font-family: inherit; cursor: pointer; }
+
+/* 이탤릭 무효화: 본문 내 *italic*은 시각 강조 없음 */
+em, i { font-style: normal; color: inherit; }
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.app-shell {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: var(--s-8) var(--s-5) var(--s-10);
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s-7);
+}
+
+.app-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  letter-spacing: -0.015em;
+  font-weight: 420;
+  color: var(--ink);
+}
+
+.app-meta {
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   Toolbar — 섹션 필터 + 진행률
+   ============================================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-6);
+}
+
+.toolbar.is-hidden { display: none; }
+
+.filter-group {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 540;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: var(--s-2);
+}
+
+.filter-pill {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  transition: background var(--dur-1) var(--ease-quiet),
+              color var(--dur-1) var(--ease-quiet);
+}
+.filter-pill:hover { background: var(--ink-a04); }
+.filter-pill:active { opacity: 0.8; }
+.filter-pill.is-active {
+  background: var(--ink);
+  color: var(--vellum);
+  border-color: var(--ink);
+  box-shadow: var(--shadow-inset-press);
+}
+
+.progress {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.progress strong { color: var(--ink); font-weight: 500; }
+
+/* ============================================================
+   Progress bar — 풀이 진행률을 시각적으로 표시
+   ============================================================ */
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: var(--s-6);
+  padding: var(--s-3) var(--s-4);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+}
+
+.progress-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--paper-sunken);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--moss);
+  border-radius: var(--r-pill);
+  transition: width var(--dur-3) var(--ease-quiet);
+  width: 0%;
+}
+
+.progress-bar-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  min-width: max-content;
+}
+.progress-bar-label strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.progress-bar-position {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding-left: var(--s-3);
+  border-left: 1px solid var(--line);
+}
+.progress-bar-position strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Question card
+   ============================================================ */
+.q-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  box-shadow: var(--shadow-1);
+  padding: var(--s-7);
+  margin-bottom: var(--s-5);
+}
+
+.q-card.is-flagged {
+  border-style: dashed;
+}
+
+.q-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.q-id-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.q-id {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.q-section-mark {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--r-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 540;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--paper-sunken);
+}
+.q-section-mark.has-flag {
+  background: var(--lilac-tint);
+  color: var(--lilac-deep);
+}
+
+.q-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+  max-width: 55%;
+}
+
+.q-tag {
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 460;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  background: var(--paper-sunken);
+  padding: 2px 7px;
+  border-radius: var(--r-1);
+}
+
+.q-prompt {
+  font-family: var(--font-serif);
+  font-size: var(--fs-body-lg);
+  line-height: 1.62;
+  color: var(--ink);
+  letter-spacing: -0.003em;
+  margin-bottom: var(--s-6);
+}
+
+/* ============================================================
+   Choices
+   ============================================================ */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+}
+
+.choice {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  padding: var(--s-3) var(--s-4);
+  background: var(--vellum);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-quiet),
+              border-color var(--dur-1) var(--ease-quiet);
+}
+.choice:hover { background: var(--paper-edge); }
+
+.choice.is-selected {
+  background: var(--moss-tint);
+  border-color: var(--moss);
+}
+
+.choice.is-correct-answer {
+  background: var(--success-tint);
+  border-color: var(--success);
+}
+.choice.is-wrong-pick {
+  background: var(--danger-tint);
+  border-color: var(--danger);
+}
+.choice.is-disabled { cursor: default; }
+.choice.is-disabled:hover { background: inherit; }
+.choice.is-correct-answer:hover { background: var(--success-tint); }
+.choice.is-wrong-pick:hover { background: var(--danger-tint); }
+
+.choice-marker {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  font-weight: 500;
+  color: var(--ink-3);
+  min-width: 22px;
+  padding-top: 1px;
+}
+.choice.is-selected .choice-marker,
+.choice.is-correct-answer .choice-marker,
+.choice.is-wrong-pick .choice-marker {
+  color: var(--ink);
+}
+
+.choice-text {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--ink-2);
+  flex: 1;
+}
+.choice.is-correct-answer .choice-text,
+.choice.is-wrong-pick .choice-text { color: var(--ink); }
+
+.choice-radio {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--ink-a40);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+  position: relative;
+  transition: border-color var(--dur-1) var(--ease-quiet);
+}
+.choice.is-selected .choice-radio { border-color: var(--moss-deep); }
+.choice.is-selected .choice-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: var(--moss-deep);
+  border-radius: 50%;
+}
+
+/* ============================================================
+   Action row
+   ============================================================ */
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.action-left { display: flex; gap: var(--s-2); }
+.action-right { display: flex; gap: var(--s-2); }
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--vellum);
+  font-family: var(--font-sans);
+  font-weight: 520;
+  font-size: 13px;
+  padding: 7px 15px;
+  border-radius: var(--r-2);
+  border: none;
+  box-shadow: var(--shadow-inset-press);
+  transition: background var(--dur-1) var(--ease-quiet);
+}
+.btn-primary:hover  { background: var(--ink-2); }
+.btn-primary:active { opacity: 0.8; }
+.btn-primary:disabled {
+  background: var(--ink-4);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-2);
+  padding: 6px 13px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  transition: background var(--dur-1) var(--ease-quiet);
+}
+.btn-secondary:hover  { background: var(--ink-a04); }
+.btn-secondary:active { opacity: 0.8; }
+.btn-secondary:disabled {
+  color: var(--ink-4);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Explanation
+   ============================================================ */
+.explanation {
+  margin-top: var(--s-5);
+  padding: var(--s-5) var(--s-6);
+  background: var(--vellum);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--moss);
+  border-radius: var(--r-3);
+  animation: explanationIn var(--dur-3) var(--ease-quiet);
+}
+
+@keyframes explanationIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.explanation-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 540;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--s-2);
+}
+
+.explanation-verdict {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: 420;
+  line-height: 1.30;
+  margin-bottom: var(--s-4);
+  letter-spacing: -0.003em;
+}
+.explanation-verdict.is-correct { color: var(--success); }
+.explanation-verdict.is-incorrect { color: var(--danger); }
+
+.explanation-body {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.66;
+  color: var(--ink);
+  letter-spacing: -0.002em;
+}
+
+.explanation-body .block { margin-bottom: var(--s-4); }
+.explanation-body .block:last-child { margin-bottom: 0; }
+
+.explanation-body .block-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 540;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--moss-deep);
+  margin-bottom: var(--s-2);
+}
+.explanation-body .block-label.is-trap {
+  color: var(--clay-deep);
+}
+
+.explanation-body strong {
+  font-weight: 540;
+  color: var(--ink);
+  background: var(--highlight-yellow);
+  padding: 0 2px;
+}
+
+.explanation-body table {
+  border-collapse: collapse;
+  margin: var(--s-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+}
+.explanation-body th,
+.explanation-body td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  text-align: left;
+}
+.explanation-body th {
+  background: var(--paper-sunken);
+  font-weight: 540;
+  color: var(--ink);
+}
+.explanation-body td { color: var(--ink-2); }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.app-footer {
+  margin-top: var(--s-8);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  align-items: center;
+}
+
+.footer-note { max-width: 480px; line-height: 1.55; }
+
+.loading {
+  text-align: center;
+  padding: var(--s-10) var(--s-5);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body-lg);
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 640px) {
+  .app-shell { padding: var(--s-5) var(--s-4) var(--s-8); }
+  .app-title { font-size: 22px; }
+  .q-card { padding: var(--s-5); }
+  .q-header { flex-direction: column; }
+  .q-tags { max-width: 100%; justify-content: flex-start; }
+  .toolbar { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <header class="app-header">
+    <h1 class="app-title" id="appTitle">Quiz</h1>
+    <span class="app-meta" id="totalMeta">로딩 중…</span>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="filter-group" id="filterGroup">
+      <span class="filter-label">섹션</span>
+      <!-- 필터 핀은 MD의 SECTION 라벨에 따라 동적으로 생성 -->
+    </div>
+    <div class="progress" id="progressMeta">—</div>
+  </div>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+    <div class="progress-bar-label" id="progressBarLabel">—</div>
+    <div class="progress-bar-position" id="progressBarPosition">—</div>
+  </div>
+
+  <main id="quizRoot">
+    <div class="loading">문제를 준비하고 있어요…</div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-note">
+      답을 고른 뒤 <strong>확인</strong>을 누르면 해설이 열려요.
+    </div>
+    <div>
+      <button class="btn-secondary" id="resetBtn">처음부터</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ============================================================
+     문제 데이터 — MD 원본을 그대로 임베드
+     다른 과목으로 교체 시 이 블록의 내용만 갈아끼우면 됨.
+     ============================================================ -->
+<script type="text/markdown" id="quizData">
+# 환자의사사회 시험 직전 통합 복습 50문제
+
+## SECTION: 연명의료법
+
+---
+
+### ID: Q01
+### TAGS: 연명의료법 / 결정주체 위계 / 자기결정권
+
+**Q.** 65세 남자가 췌장암 4기로 진단받은 후 점차 악화되어 입원하였다. 의식은 명료하며 본인의 향후 치료에 대한 의사를 가족 앞에서 명확히 표현하고 있다. 아내와 두 명의 성인 자녀가 함께 살고 있고, 가족은 환자에게 모든 가능한 치료를 받게 해주기를 원한다. 이 환자에 대한 연명의료계획서 작성과 관련하여 가장 적절한 조치는?
+
+- **A1.** 아내와 두 자녀가 합의한 결정에 따라 담당의사가 연명의료계획서를 작성한다.
+- **A2.** 환자에게 직접 설명한 후 환자 동의에 따라 담당의사가 연명의료계획서를 작성한다.
+- **A3.** 환자와 아내의 합의를 거쳐 담당의사가 연명의료계획서를 작성한다.
+- **A4.** 가족 전원의 합의를 받아 담당의사가 연명의료계획서를 작성한다.
+- **A5.** 호스피스 전담 간호사 입회 하에 가족 결정으로 연명의료계획서를 작성한다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 의사결정능력이 있는 환자는 연명의료에 관한 자기결정권을 직접 행사한다. 가족 의견은 환자가 결정능력을 잃은 이후에야 비로소 의미를 갖는다.
+
+**[정답 근거]** 연명의료계획서는 담당의사가 환자 본인의 의사를 확인하여 작성하는 문서다(법 제10조). 의식 명료 상황에서는 본인 확인이 유일한 적법 경로다.
+
+**[오답 함정]** A1·A3·A4는 자기결정권 무시형 함정으로, 환자 의사능력이 있는 상황에서 가족 동의를 결정 근거로 제시하는 오류다. A5는 문서 작성 주체를 바꾸는 함정 — 연명의료계획서는 담당의사만 작성한다.
+
+**[원리]** 결정주체 위계 = 환자 의사능력 > 사전문서 > 가족 합의.
+
+---
+
+### ID: Q02
+### TAGS: 연명의료법 / 가족 범위 / 직계존비속 순위
+
+**Q.** 65세 여자가 임종과정에 진입하였으나 의식이 없어 본인 의사를 확인할 수 없다. 사전연명의료의향서는 작성된 적이 없다. 가족 구성은 배우자, 32세 아들, 88세 어머니, 60세 남동생이다. 연명의료중단등결정을 위해 필요한 사항은?
+
+- **A1.** 배우자, 아들, 어머니 전원의 합의와 담당의사·해당 분야 전문의 1명의 확인이 필요하다.
+- **A2.** 배우자, 아들, 어머니, 남동생 전원의 합의와 담당의사·해당 분야 전문의 1명의 확인이 필요하다.
+- **A3.** 배우자 단독 동의서와 담당의사·해당 분야 전문의 1명의 확인만으로 충분하다.
+- **A4.** 배우자와 아들 두 사람의 합의서와 가정법원의 별도 허가가 필요하다.
+- **A5.** 환자와 가까운 사이로 입증된 친척 한 명의 동의와 윤리위원회 자문이 필요하다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 법상 "가족"은 배우자와 1촌의 직계존비속이 1순위이며, 형제자매는 1촌 직계가 한 명도 없을 때만 자격을 얻는다.
+
+**[정답 근거]** 1촌 직계존비속(아들·어머니)이 있는 상황에서 남동생(2촌 방계)은 결정권자 범위에서 제외된다. 성인 환자 의사확인 불가 시 가족 전원 합의와 담당의·전문의 1명 확인이 이중요건이다(법 제18조 2호).
+
+**[오답 함정]** A2는 자격 없는 자(남동생) 결정 인정형 함정이다. A3은 전원 합의 요건을 누락한 일부 동의형. A4는 법령에 없는 절차(법원 허가) 삽입형으로, 연명의료결정법은 법원 절차를 두지 않는다. A5는 가족 범위를 친소관계로 임의 확장한 오답.
+
+**[원리]** 가족 범위 위계 = 배우자와 1촌 직계존비속 → 2촌 직계존비속 → 형제자매.
+
+---
+
+### ID: Q03
+### TAGS: 연명의료법 / 진입요건 / 임종과정 판단
+
+**Q.** 76세 남자가 만성폐쇄성폐질환 악화로 인공호흡기를 적용 중이다. 가족이 인공호흡기 제거를 요청하였다. 의료진이 가장 먼저 해야 할 조치는?
+
+- **A1.** 가족 전원의 합의 동의서를 먼저 받아 의무기록에 남긴다.
+- **A2.** 의료기관윤리위원회에 절차 자문을 사전 의뢰하여 검토받는다.
+- **A3.** 가족 요청을 즉시 수용하여 인공호흡기를 곧바로 제거한다.
+- **A4.** 사전연명의료의향서 등록 여부를 관리기관에 우선 조회한다.
+- **A5.** 담당의사와 해당 분야 전문의 1명이 환자가 임종과정에 있는지 확인한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 연명의료중단의 모든 절차는 "임종과정 환자"라는 진입요건 위에서만 작동한다. 진입요건이 충족되지 않은 상태의 후속 절차는 무효다.
+
+**[정답 근거]** 임종과정 판단은 담당의사와 해당 분야 전문의 1명의 공동 확인 사항이다(법 제16조). 이 판단 없이는 가족 동의·문서 조회 모두 의미가 없다.
+
+**[오답 함정]** A1·A2·A4는 순서 함정형이다. 모두 임종과정 판단 이후에야 의미를 갖는 후행 절차를 가장 먼저 배치한 오답이다. A5는 절차 자체를 생략한 명백 오답.
+
+**[원리]** 진입요건·순서축 = 임종과정 확인 → 의사 확인 → 이행.
+
+---
+
+### ID: Q04
+### TAGS: 연명의료법 / 미성년자 / 친권자 의사
+
+**Q.** 5세 남아가 바이러스성 뇌염 후 의식과 자발호흡이 없는 상태로 중환자실에서 인공호흡기 치료 중이다. 부모는 끝까지 적극적으로 치료하기를 원하고, 환아의 회복 가능성은 거의 없다고 평가된다. 가장 적절한 조치는?
+
+- **A1.** 의료기관윤리위원회 긴급 자문을 통해 인공호흡기를 즉시 제거한다.
+- **A2.** 가정법원의 후견 판결을 받은 후에 연명의료를 중단한다.
+- **A3.** 조부모를 결정권자로 포함시켜 전원 합의로 인공호흡기를 제거한다.
+- **A4.** 부모의 의사대로 심폐정지 시까지 인공호흡기 치료를 지속한다.
+- **A5.** 뇌사로 판단되면 별도 절차 없이 사망판정 후 인공호흡기를 제거한다.
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 미성년자의 연명의료중단은 친권자(법정대리인)의 의사표시와 담당의사·전문의 1명의 임종과정 확인이라는 이중요건을 모두 충족할 때만 가능하다. 친권자 의사가 "유지" 방향이면 진행 불가다.
+
+**[정답 근거]** 친권자가 치료 지속을 원하는 한 결정 주체의 의사가 "중단"으로 모이지 않으므로 절차가 성립하지 않는다. 심폐정지 시까지 치료를 지속한다.
+
+**[오답 함정]** A5는 한국법과 외국 사고 괴리형 함정 — 한국법상 뇌사 자체는 자동 사망판정이 아니며 별도 뇌사판정위원회 절차가 필요하다. A2는 존재하지 않는 절차 삽입형. A3은 자격 없는 자(조부모) 결정 인정형으로 친권자가 아닌 조부모는 결정권자가 아니다. A1은 친권자 의사를 무시한 윤리위 우회.
+
+**[원리]** 미성년자 연명의료중단 = 친권자 의사 + 전문의 확인의 이중요건.
+
+---
+
+### ID: Q05
+### TAGS: 연명의료법 / 중단 가능 시술
+
+**Q.** 임종과정에 있는 환자에 대해 연명의료중단등결정이 이행될 때, 법령상 중단할 수 없는 항목은?
+
+- **A1.** 인공호흡기 적용 등 기계환기 유지
+- **A2.** 환자의 영양 및 물 공급 유지
+- **A3.** 심정지 시 시행하는 심폐소생술
+- **A4.** 정맥 항암제 투여 및 추가 항암치료
+- **A5.** 신부전에 대한 정기 혈액투석 유지
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 법령상 "연명의료"는 임종과정만 연장시키는 의학적 시술로 한정된다. 환자 기본 생명 유지에 필수적인 통증완화·영양공급·물공급·산소 단순공급은 연명의료에 해당하지 않으므로 중단 대상이 아니다.
+
+**[정답 근거]** 영양과 물 공급은 법령상 중단 불가 항목이다(법 제19조 2항).
+
+**[오답 함정]** A1·A3·A4·A5는 모두 연명의료에 해당하는 시술(수혈·심폐소생술·혈액투석·항암제·인공호흡기·체외생명유지술·혈압상승제)이므로 중단 가능하다.
+
+**[원리]** 법령 단순암기축 — 중단 가능과 불가 항목 구분.
+
+---
+
+### ID: Q06
+### TAGS: 연명의료법 / 문서 구분 / 작성 주체
+
+**Q.** 67세 남자가 말기 폐암으로 입원 중이며 의식이 명료하다. 본인이 직접 향후 연명의료에 대한 의사를 표명하였고, 의료기관에서 담당의사가 이를 문서로 작성하였다. 이 문서의 명칭은?
+
+- **A1.** 사전연명의료의향서 (등록기관 본인 작성)
+- **A2.** 호스피스이용동의서 (호스피스 전문기관용)
+- **A3.** 임종과정확인서 (전문의 공동 작성용)
+- **A4.** 연명의료계획서 (의료기관 담당의사 작성)
+- **A5.** 연명의료중단동의서 (가족 동의 절차용)
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 두 핵심 문서의 작성 주체와 장소가 다르다는 점이 구분의 기준이다.
+
+**[정답 근거]** 연명의료계획서 = 말기환자등의 의사에 따라 의료기관에서 담당의사가 작성하는 문서(법 제10조).
+
+**[오답 함정]** A1은 문서 혼용형 함정 — 사전연명의료의향서는 본인이 등록기관에서 직접 작성하는 별개 문서이며 담당의사가 작성하지 않는다. A2·A3·A5는 법령상 존재하지 않거나 다른 절차의 문서 명칭이다.
+
+**[원리]** 문서 구분축 = 작성 주체(담당의사 vs 본인)와 장소(의료기관 vs 등록기관).
+
+---
+
+### ID: Q07
+### TAGS: 연명의료법 / 기록 보존
+
+**Q.** 연명의료중단등결정 및 그 이행에 관한 기록의 법정 보존기간은?
+
+- **A1.** 1년 (단기 기록 기준)
+- **A2.** 3년 (처방전 기록 기준)
+- **A3.** 5년 (각종 보험 기록 기준)
+- **A4.** 10년 (일반 의무기록 기준)
+- **A5.** 30년 (영구 준영구 기록 기준)
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 연명의료 관련 기록은 일반 의무기록 보존기간(10년)과 동일하게 설정되어 있다.
+
+**[정답 근거]** 연명의료법 제20조에 따라 보존기간은 10년이다.
+
+**[오답 함정]** 단순 암기형 문항. 다른 보존기간(처방전 2년, 진단서 부본 3년 등)과 혼동하지 않도록 한다.
+
+**[원리]** 법령 단순암기축.
+
+---
+
+### ID: Q08
+### TAGS: 연명의료법 / 의식 불명 / 등록기관 조회
+
+**Q.** 87세 여자가 의식불명 상태로 응급실에 내원하였다. 가족에 따르면 환자는 건강할 때 사전연명의료의향서를 작성한 적이 있다고 한다. 환자는 현재 본인 의사를 확인할 수 없다. 의료진이 가장 먼저 해야 할 조치는?
+
+- **A1.** 국립연명의료관리기관에 사전연명의료의향서 등록 여부를 조회한다.
+- **A2.** 가족 전원의 동의서를 받아 즉시 연명의료중단 절차를 시행한다.
+- **A3.** 의료기관윤리위원회에 본인 의향 추정에 대한 자문을 의뢰한다.
+- **A4.** 가정법원에 사전의향서의 효력 판단을 별도로 신청한다.
+- **A5.** 가족이 사전의향서 사본을 직접 가져올 때까지 처치를 보류한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 사전연명의료의향서는 등록기관에 등록되어 있어야 효력이 발생하므로, 작성 이력이 있다는 진술만으로는 의사 확인이 완성되지 않는다.
+
+**[정답 근거]** 의식불명으로 본인 확인이 불가능할 때는 국립연명의료관리기관에 등록 조회를 요청한다. 등록이 확인되면 그것이 환자 의사로 인정된다.
+
+**[오답 함정]** A2는 절차 건너뛰기형 함정 — 사전의향서가 등록되어 있다면 그것이 곧 환자 의사이므로 가족 동의로 대체할 이유가 없다. A3·A4는 불필요 절차 추가형. A5는 처치 보류라는 임상적으로도 부적절한 선택지다.
+
+**[원리]** 의사결정 트리 3단계 — 의향서 의심 상황에서는 조회가 선행된다.
+
+---
+
+### ID: Q09
+### TAGS: 연명의료법 / 사전의향서 우선 / 가족 충돌
+
+**Q.** 85세 여자가 말기 간암으로 의식이 없는 상태에서 임종과정에 진입하였다. 환자는 5년 전 사전연명의료의향서를 적법하게 작성·등록하여 연명의료중단에 동의한다는 의사를 분명히 남겼다. 그러나 가족(배우자와 자녀들)은 치료를 계속하기를 강력히 주장한다. 가장 적절한 조치는?
+
+- **A1.** 담당의사와 해당 분야 전문의 1명이 의향서 적법성을 확인한 후 연명의료를 중단한다.
+- **A2.** 가족의 의사를 존중하여 환자 의향과 무관하게 치료를 계속 유지한다.
+- **A3.** 가족 전원의 추가 동의서를 받은 후에야 중단 절차를 시작한다.
+- **A4.** 의료기관윤리위원회의 별도 자문 절차를 거친 후에야 중단할 수 있다.
+- **A5.** 가정법원의 의향서 효력 인정 판결을 받은 후 중단을 진행한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 적법하게 작성·등록된 사전연명의료의향서는 그 자체로 환자의 의사로 인정된다. 가족 의견은 환자 의사를 대체할 수 없고 보완에 불과하다.
+
+**[정답 근거]** 의사능력 없음 + 사전의향서 존재 → 담당의·전문의 1명의 적법성 확인 후 즉시 중단 가능(법 제17조 2호). 가족 동의 추가는 법령상 요건이 아니다.
+
+**[오답 함정]** A2는 자기결정권 무시형. A3은 불필요 절차 추가형 — 적법 의향서가 있을 때 가족 동의는 요건이 아니다. A4는 윤리위 자문이 법령상 필수가 아닌 상황에서 의무화한 함정. A5는 존재하지 않는 절차 삽입형.
+
+**[원리]** 결정주체 위계축 — 사전문서가 적법하면 가족 합의보다 우위.
+
+---
+
+### ID: Q10
+### TAGS: 연명의료법 / 윤리위원회 / 담당의 거부
+
+**Q.** 79세 남자가 폐암 말기로 임종과정에 진입하였다. 환자의 사전연명의료의향서가 적법하게 확인되었으나, 담당의사가 개인적 신념을 이유로 연명의료중단의 이행을 거부하고 있다. 적절한 조치는?
+
+- **A1.** 환자의 사전연명의료의향서를 효력 없음으로 처리하여 무효화한다.
+- **A2.** 보건복지부령에 따른 별도 절차로 관할 보건소에 신고한다.
+- **A3.** 가족이 의사 변경 요청을 제출할 때까지 치료를 그대로 유지한다.
+- **A4.** 의료기관윤리위원회의 심의를 거쳐 담당의사를 교체한다.
+- **A5.** 병원장이 직접 인공호흡기 제거를 시행하여 의향서를 이행한다.
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 담당의사의 양심적 거부권은 인정되지만, 그것이 환자의 자기결정권을 무효화하지는 못한다. 거부 시에는 절차를 거쳐 의사를 교체한다.
+
+**[정답 근거]** 담당의사가 연명의료중단등결정의 이행을 거부할 경우 의료기관윤리위원회 심의를 거쳐 담당의사를 교체한다(법 제19조 3항).
+
+**[오답 함정]** A5는 이행 주체 오류 — 병원장은 직접 이행 주체가 아니며 윤리위 절차를 생략할 수 없다. A2는 존재하지 않는 절차 삽입형 — 법령상 보건소 신고 절차가 없다. A1·A3은 자기결정권 직접 무시형.
+
+**[원리]** 절차상 예외 — 담당의 거부 시 윤리위 심의 후 교체.
+
+---
+
+### ID: Q11
+### TAGS: 연명의료법 / 진입요건 / 결정주체 부적격
+
+**Q.** 70세 남자가 폐렴으로 입원하여 점차 호전 중이나 섬망이 지속되어 의사 표현이 어렵다. 사전연명의료의향서는 작성된 적이 없고, 환자는 독거노인이며 사촌누나 외에는 문병을 온 사람이 없다. 사촌누나가 연명의료중단을 요청한다. 가장 적절한 조치는?
+
+- **A1.** 사촌누나의 의사에 따라 즉시 연명의료중단 절차를 진행한다.
+- **A2.** 사촌누나와 함께 연명의료계획서 작성 절차에 들어간다.
+- **A3.** 현재 치료를 그대로 유지하고 환자 상태 추이를 지속 관찰한다.
+- **A4.** 의료기관윤리위원회에 사촌의 결정권 인정 심의를 의뢰한다.
+- **A5.** 가정법원에 후견인 지정을 신청한 후 중단 절차에 들어간다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 두 가지 조건이 모두 미충족이다. 첫째, 폐렴 호전 중 환자는 임종과정 환자가 아니다(진입요건 불충족). 둘째, 사촌은 법상 가족 범위(배우자·1촌 직계존비속·형제자매)에 포함되지 않는다(결정주체 부적격).
+
+**[정답 근거]** 진입요건도 충족되지 않고 적법한 결정 주체도 없으므로 연명의료중단 절차 자체가 성립하지 않는다. 현행 치료를 유지한다.
+
+**[오답 함정]** A1·A2는 자격 없는 자 결정 인정형. A4는 결정주체와 진입요건이 모두 결여된 상태에서 윤리위 안건이 성립하지 않는데 자문을 의뢰하는 함정. A5는 존재하지 않는 절차 삽입형.
+
+**[원리]** 진입요건과 결정주체 자격이 모두 충족되어야 절차가 성립한다.
+
+---
+
+### ID: Q12
+### TAGS: 연명의료법 / 의사능력 있음 / 의향서 본인 확인
+
+**Q.** 45세 여자가 유방암 진단 후 항암치료 중이며, 1년 전 사전연명의료의향서를 적법하게 작성·등록하였다. 현재 의식이 명료하다. 환자가 향후 연명의료 의사를 재확인하려 할 때 가장 적절한 조치는?
+
+- **A1.** 사전연명의료의향서 내용을 환자 본인에게 직접 확인한다.
+- **A2.** 등록된 의향서 내용을 배우자 등 가족에게 우선 확인시킨다.
+- **A3.** 담당의사 단독 판단으로 의향서 적법성 여부를 별도로 확인한다.
+- **A4.** 해당 분야 전문의 1명의 별도 확인 절차만으로 효력을 인정한다.
+- **A5.** 의료기관윤리위원회에 의향서 효력 판단을 별도 의뢰한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 사전의향서가 있더라도 환자가 의사능력을 가지고 있다면 본인 확인이 항상 1순위다. 의향서는 의사 확인이 불가능할 때의 대체 절차다.
+
+**[정답 근거]** 의사능력 있는 환자 + 사전의향서 보유 → 본인 의향 직접 확인이 표준 절차다. 의향서는 작성 후 의사가 변경될 수도 있다.
+
+**[오답 함정]** A2·A3·A4는 의사능력 있는 환자를 우회하는 함정 — 의사능력이 있을 때는 전문가·가족·문서 확인 모두 본인 확인보다 후순위다. A5는 불필요 절차 추가형.
+
+**[원리]** 결정주체 위계축 — 의사능력 > 사전문서.
+
+---
+
+### ID: Q13
+### TAGS: 연명의료법 / 미성년자 / 가족 갈등
+
+**Q.** 16세 남자가 골육종으로 입원하여 점차 악화되어 임종과정에 진입하였다. 환자는 더 이상의 치료를 원하지 않는다고 분명히 말하고 있다. 부모는 끝까지 적극적으로 치료해주기를 요청하지만, 친할머니는 환자의 의견에 동조하고 있다. 가장 적절한 조치는?
+
+- **A1.** 환자의 분명한 의사를 존중하여 즉시 연명의료중단을 시행한다.
+- **A2.** 친권자인 부모의 의사대로 적극 치료를 그대로 지속한다.
+- **A3.** 친할머니와 부모의 다수결 표결 결과에 따라 결정한다.
+- **A4.** 가정법원에 친권자 의사 적합성에 대한 판단을 신청한다.
+- **A5.** 연명의료계획서 존재를 우선 확인하고 의료기관윤리위원회 자문을 통해 갈등을 조정한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 미성년자는 자기결정권만으로 연명의료중단을 종결할 수 없다. 동시에 친권자의 의사 또한 자녀에게 회복 불가한 결과를 가져오는 사안에서 윤리적 검토 없이 일방 수용될 수 없다.
+
+**[정답 근거]** 미성년자 + 가족 간 의견 충돌 → 연명의료계획서 존재 확인을 우선하고, 갈등 조정을 위해 의료기관윤리위원회 자문을 활용한다.
+
+**[오답 함정]** A1은 자기결정권 무시형 — 미성년자의 결정만으로 종결할 수 없다. A2는 친권자 의사 일방 수용형. A3은 법령에 없는 다수결 절차. A5는 존재하지 않는 법원 절차 삽입형.
+
+**[원리]** 미성년자와 갈등 → 윤리위 자문이 표준 조정 경로.
+
+---
+
+## SECTION: 자율성·동의·Capacity
+
+---
+
+### ID: Q14
+### TAGS: 자율성 / 종교적 거부 / 의사능력 있음
+
+**Q.** 의식이 명료한 성인 여호와의 증인 환자가 출혈성 쇼크의 위험성에 대해 충분한 설명을 들은 후에도 종교적 신념에 따라 수혈을 일관되게 거부한다. 환자는 비수혈 대체요법으로도 만족한다고 표명한다. 의사의 가장 적절한 대응은?
+
+- **A1.** 환자의 자율적 결정을 존중하여 수혈을 시행하지 않는다.
+- **A2.** 의식이 명료해도 응급 예외 조항을 적용하여 즉시 수혈을 진행한다.
+- **A3.** 가정법원의 강제집행 허가를 받은 후 수혈을 시행한다.
+- **A4.** 가족 전원의 동의서를 받아 환자 의사와 무관하게 수혈한다.
+- **A5.** 의사결정능력을 의심하여 정신과 협진 후 수혈을 결정한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 의사결정능력이 있는 성인의 종교적 신념에 따른 치료 거부는 충분한 설명을 받은 후라면 존중되어야 한다. 종교적 거부 자체는 capacity 결여의 근거가 되지 않는다.
+
+**[정답 근거]** 의식 명료 + 충분한 정보 제공 + 일관된 거부 → autonomous refusal이 성립한다. 대법원 판례도 이러한 경우 의사에게 형사책임을 묻지 않는다는 입장이다.
+
+**[오답 함정]** A4는 자기결정권 무시 + 법적 무효(가족 동의는 본인 거부를 뒤집을 수 없다). A5는 종교적 신념을 capacity 결여로 등치시키는 오류. A2는 응급 예외의 잘못된 적용 — 응급 예외는 본인 거부가 부재할 때만 작동한다. A3은 존재하지 않는 절차.
+
+**[원리]** Informed refusal = 정보·자발성·capacity가 모두 충족된 거부.
+
+---
+
+### ID: Q15
+### TAGS: Capacity 평가 / Appelbaum-Grisso
+
+**Q.** Appelbaum-Grisso 모델에서 의사결정능력(decision-making capacity) 평가의 4가지 구성요소에 포함되지 않는 것은?
+
+- **A1.** 정보 이해 (Understanding)
+- **A2.** 결정의 사회적 타당성 (Social acceptability)
+- **A3.** 위험·이익 추론 (Reasoning)
+- **A4.** 자기 상황 적용 (Appreciation)
+- **A5.** 선택의 명확한 표현 (Expressing a choice)
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** Capacity는 환자 내부의 인지 절차에 대한 평가이며, 외부 관찰자가 결정의 옳고 그름을 판정하는 도구가 아니다.
+
+**[정답 근거]** Appelbaum-Grisso 4-component는 Understanding, Appreciation, Reasoning, Expressing a choice이다. "사회적 타당성"이라는 항목은 capacity 평가 기준에 포함되지 않으며, 이를 도입하면 paternalism으로 미끄러진다.
+
+**[오답 함정]** A2는 "결정 내용 평가"라는 매력적인 함정 — capacity 평가의 핵심은 결정 자체의 옳고 그름이 아니라 결정 과정의 인지적 온전성이다.
+
+**[원리]** Capacity는 task-specific 이고 time-specific 평가다. 결정 결과로 capacity를 역추적하지 않는다.
+
+---
+
+### ID: Q16
+### TAGS: 자율성 / 우울증 / 치료 거부
+
+**Q.** 55세 유방암 환자가 남편 사망 이후 지속되는 슬픔과 무기력감을 호소하고 있으며, 항암치료를 거부한다. 정신과는 복합적 슬픔으로 판단하였고 항우울제를 처방하였으나 환자는 복용하지 않는다. 환자의 치료 거부에 대한 가장 적절한 접근은?
+
+- **A1.** 우울증 진단이 확인되었으므로 자동적으로 capacity 결여로 판단하고 가족 결정으로 진행한다.
+- **A2.** 환자의 자율적 선택이므로 추가적인 평가나 개입 없이 거부를 그대로 수용한다.
+- **A3.** 가역적 요인(우울·통증)에 대한 치료를 시도한 후 구조화된 capacity 평가를 시행한다.
+- **A4.** 의사의 의학적 판단이 환자 선호보다 우선되므로 비자발적 치료를 즉시 시작한다.
+- **A5.** 가족이 동의서를 작성할 때까지 모든 항암치료와 검사 일정을 보류한다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 정신과 진단의 존재가 capacity 없음을 의미하지 않는다. 평가 대상은 "이 질환이 의사결정 과정 자체를 실제로 왜곡했는가"이며, 진단명만으로 capacity를 박탈할 수 없다.
+
+**[정답 근거]** 가역적 요인 치료 시도 → 구조화된 capacity 평가 → 충분한 capacity가 유지되면 거부 존중. 이것이 informed refusal의 표준 절차다.
+
+**[오답 함정]** A1은 진단명을 capacity 결여로 등치시키는 오류. A2는 평가 자체를 생략하는 반대 방향의 오류. A4는 paternalism. A5는 자기결정권 무시이자 임상적으로 부적절.
+
+**[원리]** Capacity 평가는 진단명이 아닌 인지 과정의 4-component에서 평가한다.
+
+---
+
+### ID: Q17
+### TAGS: 외상 / Implied consent
+
+**Q.** 39세 남자가 중증 교통사고 후 응급실에 내원하였다. 혈압 90/52, 맥박 123회/분, SpO₂ 87%, 호흡곤란이 진행 중이며 척수손상이 의심된다. 기관삽관 필요성을 설명하자 환자는 "삽관하지 말아주세요"라고 말한다. 가장 적절한 조치는?
+
+- **A1.** 환자의 명시적 거부 의사를 그대로 존중하여 삽관을 시행하지 않는다.
+- **A2.** 가족에게 연락하여 대리 동의를 받은 후 삽관 시행 여부를 결정한다.
+- **A3.** 의료기관윤리위원회의 긴급 자문 결과가 나올 때까지 삽관을 보류한다.
+- **A4.** 의식이 명료해질 때까지 산소만 공급하며 환자 본인 동의를 다시 구한다.
+- **A5.** 현재 의사결정능력을 평가하여 손상이 의심되면 implied consent를 적용해 즉시 삽관한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** "거부 의사 존재" 자체보다 "그 거부가 유효한 decision-making capacity 위에서 나온 것인가"가 핵심이다. 저산소증·쇼크 상태는 capacity 손상 가능성이 매우 높다.
+
+**[정답 근거]** Capacity 평가 → 손상 판단 → implied consent 적용. 외상 프로토콜에 따라 즉시 처치한다.
+
+**[오답 함정]** A1은 capacity 평가를 생략한 함정 — 말을 한다는 사실이 곧 capacity 보유는 아니다. A2는 응급 상황에서 가족 동의를 기다리는 시간 지연. A3도 응급에서 부적절한 지연. A4는 저산소증이 진행 중인 상황에서 의식 회복을 기다리는 임상적으로 위험한 선택.
+
+**[원리]** 같은 "거부"라도 capacity 상태가 결론을 가른다.
+
+---
+
+### ID: Q18
+### TAGS: Therapeutic privilege / 불안
+
+**Q.** 45세 여자가 서혜부 탈장 수술을 앞두고 있다. 환자는 수술 전 매우 심한 불안 상태를 보이고 있어 전공의는 위험성 고지를 어디까지 해야 할지 고민한다. 치료적 특권(therapeutic privilege) 적용과 관련하여 가장 적절한 접근은?
+
+- **A1.** 우선 informed consent를 정상 시도하되 설명 방식을 환자 수준에 맞게 조정한다.
+- **A2.** 환자가 치료를 포기할 가능성을 우려하여 위험성 고지를 모두 생략한다.
+- **A3.** 치료적 특권을 즉시 적용하여 위험성에 대한 모든 설명을 일괄 생략한다.
+- **A4.** 불안 자체를 capacity 결여로 판단하고 가족 대리동의를 받아 진행한다.
+- **A5.** 의사 본인 판단으로 안전하다고 판단되는 정보만 골라 선택적으로 제공한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 치료적 특권은 "정보 공개 자체가 환자에게 직접적 해를 줄 때" 매우 좁게 적용되는 예외다. 환자의 단순한 불안은 치료적 특권의 정당한 적용 근거가 아니다.
+
+**[정답 근거]** 정답은 "정보 생략"이 아닌 "전달 방식 조정"이다. Capacity 손상이 명백하면 치료적 특권으로 밀어붙이는 대신 elective surgery를 연기하고 안정화 후 재논의한다.
+
+**[오답 함정]** A2·A3·A5는 치료적 특권의 부적절한 확장 — "환자가 치료를 포기할까봐", "불편한 논의 회피"는 치료적 특권의 정당한 적용이 아니다. A4는 불안을 capacity 결여로 등치시키는 오류.
+
+**[원리]** "불안 → 설명 생략"이 아니라 "불안 → 설명 방식 조정 + 자율성 최대한 보존"이 표준이다.
+
+---
+
+### ID: Q19
+### TAGS: 동의 구성요소 / Informed consent
+
+**Q.** 충분한 정보에 의한 동의(informed consent)에서 의사가 환자에게 반드시 제공해야 하는 정보에 해당하지 않는 것은?
+
+- **A1.** 진단명 (현재 환자의 질병 또는 상태)
+- **A2.** 치료의 구체적 내용과 그 목적
+- **A3.** 시술과 치료의 예상 위험과 결과
+- **A4.** 합리적 대안 치료와 미치료 시 예후
+- **A5.** 치료비용 절감을 위한 보험사 권고 사항
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** Informed consent의 필수 정보는 환자의 치료적 의사결정에 직접 관련된 의학적 사항으로 구성된다. 보험 권고는 의학적 의사결정 정보가 아니다.
+
+**[정답 근거]** 반드시 제공해야 할 정보는 진단명·치료 내용/목적·예상 위험/결과·합리적 대안·미치료 시 예후 다섯 가지다.
+
+**[오답 함정]** A5는 "환자에게 유용해 보이는 부수 정보"라는 함정 — 보험 정보는 환자가 알 권리가 있을 수 있지만 informed consent의 법적·윤리적 필수 요소가 아니다.
+
+**[원리]** Informed consent의 정보 요소는 환자의 동의 결정에 실질적 영향을 주는 material information으로 제한된다.
+
+---
+
+### ID: Q20
+### TAGS: 우발 소견 / 응급 예외
+
+**Q.** 충수절제술 도중 우발적으로 약 5cm 크기의 단순 난소낭종이 발견되었다. 환자는 마취 상태이고 사전 동의 범위에는 난소 수술이 포함되지 않았으며 낭종은 응급을 요하지 않는다. 가장 적절한 조치는?
+
+- **A1.** 마취 중이므로 함께 절제하여 환자의 추가 수술 부담을 줄인다.
+- **A2.** 응급 예외(emergency exception) 조항을 적용하여 즉시 절제를 시행한다.
+- **A3.** 가족에게 즉시 연락하여 추가 시술에 대한 대리 동의를 받는다.
+- **A4.** 계획된 충수절제술만 종료하고 환자가 깨어난 후 별도로 상의한다.
+- **A5.** 의료기관윤리위원회의 긴급 자문을 즉시 의뢰하여 결정한다.
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 응급 예외는 생명을 위협하는 우발 소견에만 적용된다. 비응급 우발 소견에서는 환자 자율성이 우선이다.
+
+**[정답 근거]** 계획된 시술만 종료하고 깨어난 후 별도 동의를 받는다. 마취 상태의 환자는 추가 시술에 대한 자율적 동의를 할 수 없다.
+
+**[오답 함정]** A1·A2는 응급 예외의 부당한 확장 — 비응급 소견에는 적용되지 않는다. A3은 가족 대리동의의 잘못된 적용 — 본인이 깨어나면 직접 결정할 수 있으므로 가족 결정으로 우회할 이유가 없다. A5는 불필요 절차 추가형.
+
+**[원리]** 우발 소견에서 life-threatening은 즉시 처치, non-emergent는 자율성 우선.
+
+---
+
+### ID: Q21
+### TAGS: 무익한 치료 / Futility
+
+**Q.** 만성 심부전 말기 환자에 대해 장시간 심폐소생술을 시행하였으나 회복 징후가 전혀 없고, 의학적으로 추가 소생술의 효과를 기대할 수 없다. 가족은 계속 시행해주기를 요청한다. 가장 적절한 조치는?
+
+- **A1.** 가족이 새로운 의향을 표명할 때까지 무기한으로 소생술을 지속한다.
+- **A2.** 가족 전원의 서면 동의서가 도착할 때까지 소생술 행위를 계속한다.
+- **A3.** 의료기관윤리위원회 자문 결과가 도출될 때까지 소생술을 그대로 지속한다.
+- **A4.** 가정법원의 종료 허가를 받은 후 소생술 종료 절차를 시행한다.
+- **A5.** 사망 사실과 심폐소생술의 무익함을 가족에게 설명하고 소생술 종료를 결정한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 의사는 의학적으로 무익한 치료(futile treatment)를 제공할 의무가 없다. 무익성 판단은 의학적 판단이며 가족 요청만으로 뒤집히지 않는다.
+
+**[정답 근거]** 사망과 심폐소생술의 무익함을 설명하고 종료를 결정한다. 가족과의 충분한 의사소통을 동반하지만 지속할 의무가 발생하는 것은 아니다.
+
+**[오답 함정]** A1·A2는 가족 요청을 시행 의무로 오인하는 함정. A3·A4는 불필요 절차 추가형 — 의학적 무익성 판단은 윤리위·법원의 사전 허가 없이 의사가 내릴 수 있다.
+
+**[원리]** 무익한 치료를 거부할 권리는 의사의 전문직 자율성과 환자 비해악 원칙에서 비롯된다.
+
+---
+
+### ID: Q22
+### TAGS: PGY-1 / 동의 주체
+
+**Q.** 1년차 전공의가 attending이 직접 수행할 흉부 중심정맥관 삽관에 대한 informed consent를 환자에게서 받아오라는 지시를 받았다. 가장 적절한 대응은?
+
+- **A1.** 시술을 직접 수행할 attending이 informed consent를 받아야 함을 설명하고 그에게 알린다.
+- **A2.** 환자에게 시술 위험을 간단히 설명한 후 attending이 추가 설명할 것이라 안내한다.
+- **A3.** 지시받은 내용대로 즉시 환자에게서 동의서 서명을 받아 attending에게 전달한다.
+- **A4.** 동의서 서명만 우선 받고 위험 설명은 시술 직전 attending이 하도록 한다.
+- **A5.** 현장 동료 간호사에게 동의서 작성 절차의 진행을 일임하여 처리한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** Informed consent의 동의 요소 중 "권한 부여"는 시술을 직접 수행할 의사에게 향한다. 동의 주체는 시술자 본인이어야 한다.
+
+**[정답 근거]** 시술을 수행하는 의사가 직접 informed consent를 받는 것이 원칙이다. 전공의가 attending의 시술 동의서를 대신 받는 것은 동의의 권한 부여 구조를 왜곡한다.
+
+**[오답 함정]** A1·A2·A4·A5는 모두 "동의서 서식만 채우면 된다"는 형식적 동의 함정 — informed consent는 환자가 그 의사에게 권한을 부여하는 윤리적 행위다.
+
+**[원리]** 동의 주체는 시술 수행자 본인이다.
+
+---
+
+## SECTION: 환자-의사 관계·이해상충
+
+---
+
+### ID: Q23
+### TAGS: 경계 / 로맨틱 관계
+
+**Q.** 외래 진료를 받는 이성 환자가 진료를 핑계로 의사에게 저녁식사와 음악회 동반을 제안한다. 가장 적절한 대응은?
+
+- **A1.** 사적 만남에 응한 후 진료는 별도로 그대로 지속한다.
+- **A2.** 한 번 정도는 응하되 의료비를 청구하지 않는 방식으로 보완한다.
+- **A3.** 환자의 결정 능력을 의심하여 정신과 협진을 의뢰한다.
+- **A4.** 동료 의사에게 진료를 즉시 인계하고 환자와의 모든 연락을 차단한다.
+- **A5.** 정중히 거절하면서 의사-환자 관계의 경계를 명확히 설정하고 필요 시 진료 이관도 고려한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 현재 환자와의 로맨틱·성적 관계는 시작하지 않는다. 그러나 환자를 일방적으로 단절시키는 것은 의사의 의무를 회피하는 별도의 문제다.
+
+**[정답 근거]** 정중한 거절 + 명확한 경계 설정 + 필요 시 진료 이관 검토. 이것이 의사-환자 관계 보호와 환자 진료 의무 모두를 지키는 방법이다.
+
+**[오답 함정]** A1·A2는 경계 침해 — 환자 관계가 이익이나 성적 관심에 영향을 받는다는 인식 자체가 의사 신뢰를 훼손한다. A4는 환자 인계의 잘못된 방식 — 정당한 이관 절차를 거치지 않은 차단은 진료 거부에 해당할 수 있다. A5는 환자의 정상적인 사회적 표현을 병리화하는 오류.
+
+**[원리]** 경계 설정과 진료 거부는 다르다. 두 의무를 동시에 지킨다.
+
+---
+
+### ID: Q24
+### TAGS: 친밀 진료 / 자기 가족
+
+**Q.** 의사 본인의 아버지가 교통사고로 응급 수술이 필요한 상태로 같은 병원에 이송되었다. 가장 적절한 행동은?
+
+- **A1.** Primary attending에게 허가를 받아 보조자(assist) 역할로만 참여한다.
+- **A2.** 본인이 직접 집도의로서 책임지고 수술 전체를 시행한다.
+- **A3.** 다른 병원으로 즉시 이송한 후 다른 의사에게 수술을 맡긴다.
+- **A4.** 가족이 결정한 의사에게 수술을 맡기되 본인의 의료진 출입은 금한다.
+- **A5.** 가족 동의 없이 응급 수술을 진행한 후 사후에 가족에게 통보한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 자신·친척·친구에 대한 치료는 원칙적으로 피한다. 그러나 응급 상황에서는 완전 회피보다 역할 조정이 적절하다.
+
+**[정답 근거]** Primary attending의 허가를 받아 보조 역할로만 참여하는 것이 표준 권고다. 객관적 판단을 유지하면서 응급 환자에 대한 가족으로서의 역할도 가능하다.
+
+**[오답 함정]** A2는 객관성 결여 위험이 큰 직접 집도. A3은 응급 상황에서의 부적절한 이송 지연. A4는 가족으로서의 정상적 관여까지 제한하는 과잉 회피. A5는 동의 절차 무시.
+
+**[원리]** 친밀 진료 회피 원칙은 객관성 보호를 위한 것이지 역할 박탈이 아니다.
+
+---
+
+### ID: Q25
+### TAGS: 선물 / 이해상충
+
+**Q.** 환자가 의사에게 선물을 주는 상황에서, 윤리적 수용 가능성에 대한 가장 적절한 판단은?
+
+- **A1.** 저가치 감사 표현은 받을 수 있으나 고가치·친밀 선물은 정중히 거절하며 우려를 설명한다.
+- **A2.** 환자가 자발적으로 주는 선물은 종류와 가치에 관계없이 모두 그대로 수용한다.
+- **A3.** 모든 선물은 이해상충을 야기하므로 종류와 가치에 관계없이 모두 거절한다.
+- **A4.** 받은 선물의 절반은 동료에게 나누어 본인의 객관성을 유지하는 방식으로 처리한다.
+- **A5.** 기분장애나 조증 환자의 선물도 일반 환자와 동일한 기준으로 수용 판단한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 선물과 뇌물의 경계가 항상 명확하지 않으며 고가치·친밀 선물은 객관적 판단을 흐릴 위험("VIP syndrome")이 있다. 그러나 작은 감사 표현까지 일률적으로 거절하는 것은 환자와의 관계를 손상시킬 수 있다.
+
+**[정답 근거]** 저가치·일상적 감사 표현은 수용 가능, 고가치·친밀 선물은 정중히 거절하며 이해상충 우려를 설명하고 치료관계는 영향받지 않음을 안심시킨다.
+
+**[오답 함정]** A1은 일률 거절형 함정 — 임상 현실과 불일치. A2는 일률 수용형 — 이해상충 무시. A4는 윤리 회피 — 선물을 받은 사실 자체가 객관성에 영향을 줄 수 있다. A5는 판단력 손상 환자의 선물에 대한 별도 주의를 무시한다.
+
+**[원리]** 선물 수용 기준 = 가치와 친밀도와 환자의 판단력 상태.
+
+---
+
+### ID: Q26
+### TAGS: 이해상충 / 산업체 후원
+
+**Q.** 제약회사가 학회 참석비 후원과 연구비 지원을 동시에 제안하였다. 이를 윤리적으로 수용하기 위한 조건에 해당하지 않는 것은?
+
+- **A1.** IRB 승인이 확보되고 절차적으로 적법한 연구일 것
+- **A2.** 후원 사실의 완전 공개(full disclosure)가 이루어질 것
+- **A3.** 임상시험 연구비는 사전 책정 원칙에 따라 투명하게 사용될 것
+- **A4.** 후원자 동의를 얻어 학회 발표 시 후원 사실은 비공개로 처리할 것
+- **A5.** 연구 결과가 후원자의 영향을 받지 않도록 관리 체계가 갖춰질 것
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 산업체 후원 자체가 문제가 아니라 후원 사실을 숨기는 것이 문제다. 투명성은 윤리적 수용의 핵심 조건이다.
+
+**[정답 근거]** Full disclosure가 정당화 조건의 핵심이므로 "비공개"는 정당화 조건이 될 수 없다.
+
+**[오답 함정]** A4는 "후원자의 동의" 같은 매력적 조건을 추가하여 비공개를 정당화하는 함정 — 그러나 disclosure는 후원자가 아닌 연구 결과 이용자를 위한 원칙이다.
+
+**[원리]** 이해상충 관리의 핵심 = 회피와 투명성.
+
+---
+
+### ID: Q27
+### TAGS: 의사 신념 충돌 / 진료 이관
+
+**Q.** 환자가 자신의 종교·문화적 신념에 부합하는 시술을 요청하였으나 의사 본인의 신념과 충돌한다. 해당 시술 자체는 합법적이며 의학적으로 적절하다. 가장 적절한 대응은?
+
+- **A1.** 의사 본인의 신념을 환자에게 설득하여 다른 결정으로 유도한다.
+- **A2.** 편향 없는 상담을 제공하되, 본인이 시술하지 않을 경우 다른 의사에게 진료를 이관한다.
+- **A3.** 시술 요청을 거부하고 해당 환자를 더 이상 진료하지 않는다.
+- **A4.** 의료기관윤리위원회에 해당 시술의 윤리적 타당성을 별도로 의뢰한다.
+- **A5.** 의사 신념과 무관하게 모든 환자 요청 시술을 의무적으로 시행한다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 의사의 양심적 거부권은 인정되지만, 그것이 환자의 진료 접근권을 차단해서는 안 된다.
+
+**[정답 근거]** 편향 없는 상담과 진료 이관(transfer of care). 양심적 거부와 환자 진료권을 동시에 보호하는 방식이다.
+
+**[오답 함정]** A1·A5는 양 극단의 함정 — 환자 자율성 침해와 의사 양심 침해. A3은 진료 차단으로 환자 접근권 침해. A4는 합법·적절 시술에 대한 불필요 절차.
+
+**[원리]** 양심적 거부와 진료 연속성을 동시 보호한다.
+
+---
+
+## SECTION: 정보공개·비밀유지·의료오류
+
+---
+
+### ID: Q28
+### TAGS: 비밀유지 예외 / 제3자 위험
+
+**Q.** 환자에게 HIV 양성이 진단되었으며 환자는 배우자가 있음에도 알리기를 거부한다. 의사의 가장 적절한 대응은?
+
+- **A1.** 환자 비밀유지 원칙을 절대시하여 어떤 상황에서도 외부 공개를 하지 않는다.
+- **A2.** 환자 동의 절차 없이 즉시 가족 구성원 전원에게 진단 사실을 공개한다.
+- **A3.** 환자에게 배우자 통보 필요성을 설명하고, 거부 시 제3자 위험에 따라 통보를 검토한다.
+- **A4.** 법정감염병 보건소 신고만 하고 배우자에 대한 통보는 환자에게 전적으로 일임한다.
+- **A5.** 배우자가 자발적으로 검사를 받을 때까지 어떠한 의료적 조치도 취하지 않는다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 비밀유지는 절대 원칙이 아니라 제3자 위험·공공 해악·국가 강제 시 예외가 있다. HIV는 제3자(배우자) 감염 위험의 전형이다.
+
+**[정답 근거]** 환자에게 우선 설명·설득을 시도하고, 거부 시 제3자 위험에 따른 비밀유지 예외를 고려한다. 동시에 법정감염병으로 신고 의무도 있다.
+
+**[오답 함정]** A1은 비밀유지 절대주의 — 예외 사유를 무시. A2는 가족 전원에 대한 과도한 공개 — 위험에 노출된 사람에 한정해야 한다. A4·A5는 제3자 보호 의무를 회피하는 소극 함정.
+
+**[원리]** 비밀유지 예외 3축 = 제3자 위험 / 공공 해악 / 국가 강제 보고.
+
+---
+
+### ID: Q29
+### TAGS: Tarasoff / Duty to warn
+
+**Q.** 환자가 진료 중 "내 상사를 죽이겠다"고 구체적 살해 위협을 표현한다. 위협의 임박성과 심각성이 모두 명확한 상황이다. 의사의 의무에 해당하지 않는 것은?
+
+- **A1.** 잠재적 피해자에게 위험을 경고한다 (Duty to warn).
+- **A2.** 경찰 등 위험 방지가 가능한 기관에 통보한다 (Duty to protect).
+- **A3.** 환자에 대한 비자발적 입원을 적극 고려한다.
+- **A4.** 비밀유지를 절대시하여 외부 공개를 일체 금지한다.
+- **A5.** 위협 내용과 평가 결과를 신중히 문서화한다.
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** Tarasoff 원칙은 비밀유지 예외 중 가장 명확한 사례다. 임박하고 심각한 타인에 대한 위협은 비밀유지보다 우선한다.
+
+**[정답 근거]** Duty to warn(피해 예상자)과 Duty to protect(경찰 등) 모두 의사의 의무다. A4는 이 의무를 부정하므로 의무에 해당하지 않는다.
+
+**[오답 함정]** A4는 비밀유지 절대주의 함정 — 정신과 비밀보호의 일반 원칙을 예외 상황에 잘못 적용한 오류다.
+
+**[원리]** Tarasoff = Duty to warn + Duty to protect.
+
+---
+
+### ID: Q30
+### TAGS: 의료오류 / 무해 결과
+
+**Q.** 환자에게 잘못된 약이 처방되었으나 다행히 환자에게 실제 해는 발생하지 않았다. 가장 적절한 대응은?
+
+- **A1.** 해가 없었으므로 환자에게 알리지 않고 진료기록만 조용히 정정한다.
+- **A2.** 해가 없더라도 환자에게 사실을 알리고 사과한 후 시스템 개선을 도모한다.
+- **A3.** 처방한 의사 본인에게만 알리고 환자에 대한 외부 공개는 하지 않는다.
+- **A4.** 환자 가족에게만 알리고 환자 본인에게는 부담을 우려해 알리지 않는다.
+- **A5.** 의료기관윤리위원회 결정 절차가 종료된 후에야 환자에게 알린다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 의료오류 공개의 기준은 결과의 유무가 아니라 진실 말하기의 의무(veracity)다. 무해 결과도 환자의 알 권리에 해당한다.
+
+**[정답 근거]** 해가 없더라도 환자에게 알리고 사과하며 systems improvement를 도모한다. 이것이 의료오류 공개의 표준이다.
+
+**[오답 함정]** A1은 결과 중심으로 공개 의무를 판단하는 함정. A3·A4는 환자를 정보 회로에서 배제하는 오류. A5는 윤리위 결정 사항이 아닌 일상적 의무를 윤리위에 미루는 함정.
+
+**[원리]** 의료오류 공개 = 결과 무관 + 진실 + 사과 + 시스템 개선.
+
+---
+
+### ID: Q31
+### TAGS: 의대생 / 나쁜 소식
+
+**Q.** 자궁경부암 추적검사에서 뼈 전이가 발견된 42세 여자 환자가 회진 중에 학생에게 "괜찮은 상황이래요, 맞죠?"라고 묻는다. 담당의사는 "이상 소견은 있지만 치료 방법이 있다"고만 말하고 나간 상태다. 학생의 가장 적절한 대응은?
+
+- **A1.** "괜찮은 상황"이라고 분명히 말하여 환자의 불안을 즉시 안심시킨다.
+- **A2.** 환자 옆에서 침묵하며 답변 자체를 회피하는 태도를 취한다.
+- **A3.** 보호자에게만 별도로 환자의 정확한 진단을 알려준다.
+- **A4.** 학생 본인의 판단으로 뼈 전이의 임상적 의미를 직접 자세히 설명한다.
+- **A5.** 본인이 확실히 아는 내용만 말하고 정확한 설명은 담당의사와 함께 다시 논의하도록 연결한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 학생의 두 가지 금기는 거짓말과 독자적 해석이다. 학생의 윤리적 위치는 "독립적 설명자"가 아니라 "정직 + 동맹 형성 + 연결 역할"이다.
+
+**[정답 근거]** 확실한 내용만 말하기, 기존 의사 설명 반복·강화, 환자 편에 서기(alliance), 모르는 부분 솔직히 인정, 담당 의사와 연결.
+
+**[오답 함정]** A1은 거짓말과 paternalism. A2는 alliance 깨짐. A4는 학생 역할 초과와 예후 이해도 부족. A5는 환자 알 권리 우회와 비밀유지 위반.
+
+**[원리]** 학생 윤리 = 정직 + 동맹 + 연결 (독립 설명 ❌).
+
+---
+
+### ID: Q32
+### TAGS: 환자의 알 권리 / 가족 요구
+
+**Q.** 59세 여자가 폐암 4기로 입원 중이다. 남편은 환자에게 임종이 임박했음을 알리는 것을 원하지 않는다. 의료진이 가장 먼저 해야 할 조치는?
+
+- **A1.** 남편의 요구를 그대로 수용하여 환자에게 진단을 알리지 않는다.
+- **A2.** 가족 요구를 무시하고 환자에게 직접 진단과 예후를 즉시 모두 설명한다.
+- **A3.** 남편을 먼저 설득하여 환자에게 알리는 것에 대한 태도 변화를 유도한다.
+- **A4.** 환자를 호스피스 병동으로 즉시 전원하여 임종 준비 절차에 들어간다.
+- **A5.** 가족 전원이 모인 자리에서 다수결로 알림 여부를 결정한다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 가족 요구의 일방적 수용도, 환자에게 즉시 직행하는 것도 적절하지 않다. 환자의 알 권리는 자기결정권의 전제조건이지만, 한국 임상에서는 가족 설득이 1차 단계로 자리잡아 있다.
+
+**[정답 근거]** 가족을 먼저 설득하여 태도 변화를 유도하는 것이 "가장 먼저" 해야 할 조치다. 환자에게 직접 알리는 것은 가족 설득 이후의 다음 단계가 된다.
+
+**[오답 함정]** A1은 자기결정권 직접 침해. A2는 가족 갈등을 무시한 직행. A4는 환자가 상태를 인지·동의하기 전의 후행 단계를 가장 먼저로 배치한 순서 함정. A5는 법령·임상에 없는 절차.
+
+**[원리]** 환자 알 권리 보호는 가족 설득 이후 자연스럽게 이어지는 경로다.
+
+---
+
+### ID: Q33
+### TAGS: 자살사고 / 비밀유지 예외
+
+**Q.** 외래 진료 중 환자가 구체적인 방법을 동반한 자살사고(suicidal ideation)를 표현한다. 가장 적절한 대응은?
+
+- **A1.** 환자 비밀유지를 우선시하여 외부 공개 없이 그날 진료를 종료한다.
+- **A2.** 위험 평가 후 필요 시 자발적·비자발적 입원을 고려하고 비밀유지 예외임을 인지한다.
+- **A3.** 환자에게 약물만 처방하고 별도 후속 조치 없이 즉시 귀가시킨다.
+- **A4.** 가족에게만 비밀리에 알리고 환자 본인에게는 사실을 숨긴다.
+- **A5.** 진료기록에 자살사고를 기록하지 않아 환자 신상을 보호한다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 자살·살인 가능성은 비밀유지 예외 사유 중 하나다. 환자 안전 확보가 비밀유지 원칙보다 우선한다.
+
+**[정답 근거]** 위험 평가 후 자발적·비자발적 입원 고려가 표준 대응이다. 비밀유지 예외 인지가 윤리적 판단의 핵심이다.
+
+**[오답 함정]** A1은 비밀유지 절대주의 함정. A4는 환자 배제. A3은 임상적 무책임. A5는 의무기록 위조에 해당하며 환자 보호와 오히려 반대된다.
+
+**[원리]** 비밀유지 예외 사유 = 자살 / 살인 / 아동학대 / 법원 명령 / 환자가 소송 당사자.
+
+---
+
+## SECTION: 미성년자·취약환자
+
+---
+
+### ID: Q34
+### TAGS: 미성년자 / 종교적 거부
+
+**Q.** 응급실에 내원한 8세 어린이가 외상 후 출혈로 즉시 수혈이 필요한 상태다. 부모는 종교적 이유로 수혈을 거부한다. 가장 적절한 조치는?
+
+- **A1.** 부모의 종교적 결정을 존중하여 수혈을 시행하지 않는다.
+- **A2.** 부모 거부에도 불구하고 아이의 생명을 위해 응급 수혈을 시행한다.
+- **A3.** 가정법원의 강제 수혈 허가 결정이 나올 때까지 수혈을 보류한다.
+- **A4.** 부모 외 친척의 의견을 추가로 들은 후에 수혈 여부를 결정한다.
+- **A5.** 비수혈 대체요법으로 출혈을 관리하고 아이의 사망 가능성을 수용한다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 성인은 자신의 치료를 거부할 수 있지만, 응급 상황에서 미성년자를 대신한 친권자의 거부는 효력이 제한된다.
+
+**[정답 근거]** 부모 거부에도 불구하고 응급 수혈을 시행한다. 미성년자의 생명권은 친권자 종교적 자유의 한계가 된다.
+
+**[오답 함정]** A1은 친권자 자율성과 미성년자 생명권의 충돌에서 자율성을 우선시한 오류. A3은 응급에서의 부적절한 지연. A4는 친권자가 아닌 자에게 결정권을 확장. A5는 의사의 비해악 원칙 위반.
+
+**[원리]** 미성년자 응급 = 생명권 > 친권자 종교적 거부.
+
+---
+
+### ID: Q35
+### TAGS: 미성년자 / 약물검사 동의
+
+**Q.** 부모가 자녀 모르게 자녀의 소변 약물검사를 요청한다. 가장 적절한 대응은?
+
+- **A1.** 미성년자를 속이지 않으며, 우려를 솔직히 논의한 후 적절하면 본인 동의를 받는다.
+- **A2.** 부모에게 동의서만 받고 환자에게는 일반 소변검사라고 다르게 설명한다.
+- **A3.** 부모 요청대로 즉시 검사를 시행하고 결과만 부모에게 통보한다.
+- **A4.** 학교 측에 신고하여 학교 통제 하에 검사가 이뤄지도록 한다.
+- **A5.** 부모 요청을 사유 검토 없이 즉시 거부하고 진료를 종료한다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 미성년자라도 진료 관계에서 속이지 않는다는 원칙이 적용된다. 동시에 부모의 우려도 정당하게 다뤄야 한다.
+
+**[정답 근거]** 우려 논의와 검사 적절성 판단, 그리고 미성년자의 동의 — 이 세 단계가 표준이다.
+
+**[오답 함정]** A1·A2는 환자를 속이는 함정. A4는 의사 영역을 벗어난 외부 위임. A5는 부모 우려를 정당하게 다루지 않는 일률 거부.
+
+**[원리]** 미성년자도 진료에서 정직(veracity) 의무의 대상이다.
+
+---
+
+### ID: Q36
+### TAGS: 청소년 / 단독 면담
+
+**Q.** 14세 청소년 진료 중 성·약물 사용 등 민감한 주제를 다루어야 할 상황이다. 진료실에는 부모가 동석하고 있다. 가장 적절한 접근은?
+
+- **A1.** 부모와 함께 자리에서 모든 민감 정보를 그대로 공유한다.
+- **A2.** 청소년 단독 면담은 부적절하므로 부모 동석을 끝까지 강제한다.
+- **A3.** 부모에게 잠시 자리를 비켜달라고 요청하고 청소년 단독 면담을 시도한다.
+- **A4.** 청소년이 부모 동석을 명시적으로 거부할 때까지 단독 면담은 시도하지 않는다.
+- **A5.** 부모를 통해서만 모든 질문을 전달하여 청소년에게 묻는다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 청소년 진료에서 민감 주제는 부모 동석 시 솔직한 정보 수집이 어렵다. 의사가 능동적으로 단독 면담 기회를 만들어주는 것이 표준이다.
+
+**[정답 근거]** 부모에게 잠시 자리를 비켜달라고 요청하고 청소년 단독 면담과 비밀유지를 시도한다. 청소년의 자율성 발달을 지원하는 표준 방식이다.
+
+**[오답 함정]** A1·A5는 청소년 자율성 무시. A2는 사실 오류 — 단독 면담은 불법이 아니다. A4는 의사의 적극적 역할을 포기한 수동 함정.
+
+**[원리]** 청소년 자율성 발달 지원은 의사의 능동적 면담 구조 조정으로 시작된다.
+
+---
+
+### ID: Q37
+### TAGS: 아동학대 / 비밀유지 예외
+
+**Q.** 진료 중 6세 아동에게 학대 정황(반복적 멍, 일관성 없는 보호자 진술)이 발견된다. 가장 적절한 조치는?
+
+- **A1.** 보호자에게 항의를 표명한 후 그날 진료를 즉시 종료한다.
+- **A2.** 아이의 안전을 위해 진료기록에 학대 의심 사실을 기록하지 않는다.
+- **A3.** 학대 가능성을 보호자에게 직접 확인하여 자백을 받은 후에야 신고한다.
+- **A4.** 아이를 별도로 면담하고 신중히 문서화한 후 아동보호전문기관에 신고한다.
+- **A5.** 다음 진료까지 별도 조치 없이 추가 정황을 관찰만 한다.
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 아동학대는 비밀유지의 명백한 예외이며 한국에서는 아동학대처벌법상 의료인의 신고 의무가 있다.
+
+**[정답 근거]** 아이 별도 면담과 신중한 문서화, 의학적 치료, 아동보호전문기관 또는 112 신고. 이 절차가 한국 표준이다.
+
+**[오답 함정]** A1은 진료 의무 위반. A2는 의무기록 누락 — 학대 증거 보존이 오히려 아동 보호에 필수적이다. A3은 신고 의무를 보호자 자백에 종속시키는 함정 — 의심만으로 신고 의무가 발생한다. A5는 위해 지속을 방치.
+
+**[원리]** 아동학대는 의료인의 법정 신고 의무다 (재량 사항 아님).
+
+---
+
+## SECTION: 의료윤리 원칙·전문직업성
+
+---
+
+### ID: Q38
+### TAGS: 의료윤리 4원칙
+
+**Q.** 의료윤리 4원칙(선행·해악금지·정의·자율성)에 대한 설명으로 옳지 않은 것은?
+
+- **A1.** 자율성 존중은 환자의 모든 선택을 의사가 무조건 따르는 절대 원칙을 의미한다.
+- **A2.** 해악 금지의 원칙에서 해악은 더 큰 해악을 막기 위한 선행으로만 정당화된다.
+- **A3.** 정의의 원칙은 유한한 의료자원의 분배 우선순위 결정과 관련된다.
+- **A4.** 선행의 원칙은 히포크라테스 선서에 근거한 환자를 돕는 행동을 뜻한다.
+- **A5.** 4원칙은 서로 충돌할 수 있으며 상황에 따른 균형 판단이 필요하다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 자율성 존중은 환자의 선택에 개입하지 않는 것이 아니라 환자를 인간으로서 존중하는 것에 가깝다. 무조건적 추종은 의사의 비해악·선행 의무를 마비시킨다.
+
+**[정답 근거]** 자율성 존중은 환자중심 치료의 우선적 고려와 환자에 대한 인간적 존중이다. 무조건적 의사 추종과 구분된다.
+
+**[오답 함정]** A4는 자율성 원칙의 과잉 해석 함정 — 자율성은 4원칙 중 하나이지 다른 원칙을 무효화하는 절대 원칙이 아니다.
+
+**[원리]** 4원칙은 동등 비중의 상호 조정 원칙이며 단일 원칙의 절대화는 오류다.
+
+---
+
+### ID: Q39
+### TAGS: 의료윤리선언 / 역사
+
+**Q.** 의료윤리 관련 주요 선언과 그 핵심을 짝지은 것 중 옳지 않은 것은?
+
+- **A1.** 뉘른베르크 강령(1947) — 인체 실험에서의 자발적 동의 원칙
+- **A2.** 헬싱키 선언(1964) — 인체 대상 실험에 대한 최초의 합의 및 IRB 도입 근거
+- **A3.** 벨몬트 보고서(1979) — 일본 731부대 인체 실험이 그 직접적인 계기가 됨
+- **A4.** 벨몬트 보고서(1979) — 의료윤리 4원칙의 기반이 되는 6개 원칙 제시
+- **A5.** GCP(1981) — 의약품 임상시험 기준의 최초 법제화 문서
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 각 선언의 계기와 핵심 원칙을 정확히 짝짓는 것이 시험에서 자주 묻는다.
+
+**[정답 근거]** 벨몬트 보고서의 직접적 계기는 Tuskegee 매독 연구이며 731부대가 아니다. 731부대는 뉘른베르크 강령 직접 계기는 아니다.
+
+**[오답 함정]** A3은 역사적 사실의 잘못된 짝짓기 — 두 인체 실험 사건을 혼동시키는 함정이다.
+
+**[원리]** 윤리선언 4가지: 뉘른베르크(나치 실험) / 헬싱키(WMA) / 벨몬트(Tuskegee) / GCP(임상시험 법제화).
+
+---
+
+### ID: Q40
+### TAGS: 환자 권리 / 의사 의무
+
+**Q.** 의사의 윤리적 의무에 해당하지 않는 것은?
+
+- **A1.** 정당한 사유 없는 진료 거부의 금지 의무
+- **A2.** 충분한 설명에 의한 동의 확보 의무
+- **A3.** 환자 비밀유지와 개인정보 보호 의무
+- **A4.** 환자가 요청하는 모든 치료의 무조건 시행 의무
+- **A5.** 환자 차별 금지와 공정 진료 의무
+
+**ANSWER:** A4
+
+**EXPLANATION:**
+**[핵심 논리]** 의사의 의무에는 환자 요청 수용이 무한정 포함되지 않는다. 의학적으로 부적절하거나 무익한 치료를 거부할 권리는 의사의 전문직 자율성에 포함된다.
+
+**[정답 근거]** 진료거부 금지, 충분한 설명, 비밀유지, 환자차별 금지는 모두 의사의 의무다. "환자 요청 모든 치료 무조건 시행"은 의무가 아니며 오히려 비해악 원칙에 반할 수 있다.
+
+**[오답 함정]** A4는 환자 자율성을 무한 확장한 함정 — 의사의 임상 판단을 무력화하는 잘못된 의무 설정이다.
+
+**[원리]** 환자 권리와 의사 의무는 호환되지만 무조건 일치하지 않는다.
+
+---
+
+### ID: Q41
+### TAGS: 학생 전문직업성
+
+**Q.** 임상실습 중인 의대생의 전문직업성에 대한 설명으로 옳지 않은 것은?
+
+- **A1.** 학생은 예비의사로서 직무윤리를 준수해야 하는 위치에 있다.
+- **A2.** 학생도 자율규제 대상에 포함되어 처벌과 제재가 가능하다.
+- **A3.** 학생이 한 시술의 책임은 일차적으로 주치의에게 귀속된다.
+- **A4.** 학생은 환자에게 자신의 학생 신분임을 명확히 밝혀야 한다.
+- **A5.** 학생은 환자와 인간적 친밀감을 더 깊게 형성할수록 윤리적으로 우월하다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 임상실습 윤리의 핵심은 위해 방지와 경계 유지이지, 친밀감의 강도가 아니다.
+
+**[정답 근거]** 임상실습에서 학생은 인간관계 및 애정을 피해야 한다(경계 유지). 환자에게 위해를 끼치지 않는 것이 가장 중요한 원칙이다.
+
+**[오답 함정]** A5는 친밀감을 윤리적 우월로 등치시키는 함정 — 의료에서 친밀감은 경계 침해 위험으로 이어진다.
+
+**[원리]** 학생 윤리 = 신분 공개 + 위해 방지 + 경계 유지 + 책임 위계 인식.
+
+---
+
+### ID: Q42
+### TAGS: 자살 예방
+
+**Q.** 한국의 자살 관련 역학에 대한 설명으로 옳은 것은?
+
+- **A1.** 10–30대 사망원인 1위, 40–50대 사망원인 2위가 자살이다.
+- **A2.** 자살시도자는 실제 자살자의 약 2–3배 수준에 머무른다.
+- **A3.** 자살이 교통사고 사망을 넘어선 시점은 대략 2020년대이다.
+- **A4.** 자살 생각을 가진 전체 인구 비율은 약 20%에 달한다.
+- **A5.** 알려지지 않은 자살은 전체의 50% 이상으로 추정된다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 한국 자살 역학의 핵심 수치를 정확히 기억하는 것이 단순 암기형 문제의 안전 경로다.
+
+**[정답 근거]** 10–30대 사망원인 1위, 40–50대 2위가 자살이다.
+
+**[오답 함정]** A2는 수치 왜곡(실제는 40–100배). A3은 시점 왜곡(실제는 2002년). A4는 과대 평가(실제 약 4.4%). A5는 과대 평가(실제 6–21%).
+
+**[원리]** 사망원인 순위 / 40–100배(시도자) / 2002(교통사고 추월) / 4.4%(생각) / 6–21%(미인지).
+
+---
+
+### ID: Q43
+### TAGS: 분배 정의 / QALY
+
+**Q.** 의료자원 분배에서 QALYs(질보정 생존연수)에 근거한 의사결정의 한계로 자주 지적되는 점은?
+
+- **A1.** 자원의 사용 효율성을 정량적으로 무시한다는 점
+- **A2.** 중증도 무시(severity ignoring) 문제와 세대 간 정의 문제
+- **A3.** 환자 개인 선호를 과도하게 결정에 반영한다는 점
+- **A4.** 의사의 개별 임상 판단을 너무 강하게 강조한다는 점
+- **A5.** 절차적 공정성의 4가지 원칙을 직접 침해한다는 점
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** QALYs는 효율성을 극대화하지만 가장 아픈 환자나 세대 간 형평의 관점에서는 한계를 갖는다.
+
+**[정답 근거]** QALYs의 주요 한계는 severity ignoring problem과 intergenerational justice다. 후자는 fair-innings argument로 일부 정당화되기도 한다.
+
+**[오답 함정]** A1은 QALYs의 강점을 한계로 오인. A2·A4는 다른 분배 모델의 특성. A5는 절차 차원과 실체 차원을 혼동.
+
+**[원리]** QALYs의 한계 = 중증도 무시 + 세대 간 정의.
+
+---
+
+## SECTION: 연구윤리·생명윤리법
+
+---
+
+### ID: Q44
+### TAGS: IRB / 생명윤리법
+
+**Q.** 생명윤리 및 안전에 관한 법률상 기관생명윤리위원회(IRB)의 구성·운영에 관한 설명으로 옳지 않은 것은?
+
+- **A1.** 위원장 1명을 포함한 5명 이상의 위원으로 구성하여야 한다.
+- **A2.** 연구 책임자가 본인이 수행하는 연구의 IRB 심의에 위원으로 참여할 수 있다.
+- **A3.** 해당 기관에 종사하지 않는 외부 위원을 1명 이상 포함하여야 한다.
+- **A4.** 위원회를 하나의 성별로만 구성하는 것은 허용되지 않는다.
+- **A5.** 보건복지부장관이 정기적으로 평가하여 인증하는 외부 평가를 받는다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** IRB의 독립성 유지가 핵심 원칙이다. 이해당사자가 본인 연구를 심의하는 것은 독립성을 직접 훼손한다.
+
+**[정답 근거]** 연구·개발에 관여한 위원은 해당 심의에 참여할 수 없다. 이는 이해상충 방지의 기본 원칙이다.
+
+**[오답 함정]** A4는 매력적인 함정 — "전문성을 살리기 위해" 본인 연구 심의 참여를 정당화하려는 오류다.
+
+**[원리]** IRB 구성 = 5명 이상 / 성별 다양성 / 외부위원 / 이해상충 회피 / 외부 평가.
+
+---
+
+### ID: Q45
+### TAGS: 동의 면제 / IRB 심의
+
+**Q.** 인간대상연구에서 서면동의를 면제할 수 있는 사유로 가장 적절한 것은?
+
+- **A1.** 연구자 본인의 시간이 부족하고 일정이 촉박한 경우
+- **A2.** 연구비 절감과 행정 비용 축소가 강하게 요구되는 경우
+- **A3.** 동의 추정 근거가 부재하나 위험이 극히 낮고 IRB 심의를 거친 경우
+- **A4.** 연구대상자가 동의서의 의학용어 서식을 충분히 이해하지 못하는 경우
+- **A5.** 연구 결과가 학술적으로 매우 중요할 것으로 미리 예상되는 경우
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** 동의 면제는 연구 편의가 아니라 동의 추정 근거 부재와 위험 최소라는 엄격한 조건에서만 IRB 심의를 거쳐 허용된다.
+
+**[정답 근거]** 생명윤리법 제16조는 연구 진행상 불가능, 동의·거부 추정 근거 없음, 위험 극히 낮음을 충족하고 IRB 심의를 거쳐야 면제 가능하다고 규정한다.
+
+**[오답 함정]** A1·A2·A5는 연구자 편의에 따른 면제 함정 — 모두 부적절한 정당화다. A4는 동의서 이해 부족 시 대안 설명이 필요한 상황이지 면제가 정당화되는 상황이 아니다.
+
+**[원리]** 동의 면제 = 추정 근거 부재 + 최소 위험 + IRB 심의.
+
+---
+
+### ID: Q46
+### TAGS: DSMB / 연구 안전성
+
+**Q.** 임상연구에서 DSMB(Data Safety Monitoring Board)의 역할로 가장 적절한 것은?
+
+- **A1.** 연구 참여자 개인의 동의서 작성 적법성을 일일이 검토한다.
+- **A2.** 연구비 집행의 회계적 적정성을 감독하고 보고서를 작성한다.
+- **A3.** 연구 전체 수준에서 안전성을 감시하고 연구 지속 가능 여부를 평가한다.
+- **A4.** 연구 결과의 학술지 게재 적합성을 사전 심사하여 권고한다.
+- **A5.** 연구자의 임상 술기 수준을 평가하고 등급별 자격을 인증한다.
+
+**ANSWER:** A3
+
+**EXPLANATION:**
+**[핵심 논리]** DSMB는 연구 전체 수준의 안전성 감시 기구다. 개별 동의·재정·출판 등은 다른 기구의 영역이다.
+
+**[정답 근거]** DSMB는 연구 지속 가능 여부와 환자 안전을 평가한다. 이 작동이 있으면 개별 술자의 부분적 결과를 "공개 의무 있는 material information"으로 자동 분류하지 않는 근거가 된다.
+
+**[오답 함정]** A1은 IRB의 역할. A2·A4는 다른 행정 기구. A5는 술자 인증·자격 심사 영역.
+
+**[원리]** 연구 안전 감시 기구 = IRB(사전·개별) + DSMB(진행 중·전체).
+
+---
+
+## SECTION: 의료과오·환자 상담
+
+---
+
+### ID: Q47
+### TAGS: 의료분쟁 / 진료기록
+
+**Q.** 의료사고 발생 직후 진료기록의 처리에 대한 설명으로 옳은 것은?
+
+- **A1.** 사고 후 진료기록 수정은 금지되지만, 응급으로 미처 기록하지 못한 사후 기재는 허용된다.
+- **A2.** 진료기록 자체를 폐기하여 향후 분쟁의 소지를 사전에 줄인다.
+- **A3.** 사고 후 진료기록부에 눈에 띄게 수정·첨삭을 가하여 사실을 명확히 한다.
+- **A4.** 법률가가 제공해 달라는 자료는 의사 검토 없이 즉시 모두 제공한다.
+- **A5.** 환자 측이 강하게 요구하면 진료기록의 일부를 폐기할 수도 있다.
+
+**ANSWER:** A1
+
+**EXPLANATION:**
+**[핵심 논리]** 의료분쟁 발생 후 진료기록 수정 금지가 원칙이지만 "응급 상황으로 미처 기록 못한 사항의 사후 기재"는 예외다. 이 둘을 구분하지 못하면 함정에 빠진다.
+
+**[정답 근거]** 대한의사협회 권고안은 사고 후 진료기록의 수정·첨삭은 금지하되, 사후 기재는 허용한다고 구분한다.
+
+**[오답 함정]** A1은 사실상 위조에 해당. A2·A5는 의무기록 폐기로 명백한 위법. A4는 법률가 제공 자료의 사전 검토 원칙을 위반한다.
+
+**[원리]** 진료기록 = 수정·폐기 ❌ / 사후 기재 ⭕ (응급 한정).
+
+---
+
+### ID: Q48
+### TAGS: 의료분쟁 예방
+
+**Q.** 대한의사협회 의료분쟁 예방·대처 권고안의 5개 영역에 해당하지 않는 것은?
+
+- **A1.** 환자와의 관계 (신뢰 유지 및 위로)
+- **A2.** 의학지식 (지식의 함양 및 대비)
+- **A3.** 진료상의 주의 (직접 진찰, 설명의무 등)
+- **A4.** 진료기록 (작성 및 보존 관리)
+- **A5.** 의료수가 협상 (저수가 박리다매 대응)
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 5개 영역은 진료 행위 자체와 그 기록·법률 대응에 한정된다. 수가 협상은 제도적 영역이며 권고안 5영역에 포함되지 않는다.
+
+**[정답 근거]** 5개 영역 = 환자관계 / 의학지식 / 진료상 주의 / 진료기록 / 법률지식. "의료수가 협상"은 권고안 영역이 아니다.
+
+**[오답 함정]** A5는 의료분쟁 근본 원인으로 자주 거론되는 "저수가 박리다매"와 혼동하게 만드는 함정 — 그러나 이는 분쟁 원인 분석이지 예방 권고 5영역이 아니다.
+
+**[원리]** 권고안 5영역 = 환자관계 / 의학지식 / 진료상 주의 / 진료기록 / 법률지식.
+
+---
+
+### ID: Q49
+### TAGS: 환자 상담 / 삼각관계
+
+**Q.** 환자가 진료실에서 자신의 가족 구성원(특히 배우자)에 대한 불평을 반복적으로 호소한다. 가장 적절한 대응은?
+
+- **A1.** 배우자에게 직접 전화하여 환자의 불평을 그대로 모두 전달한다.
+- **A2.** 환자와 가족 간 삼각관계에 빠지지 않도록 주의하고 가족 간 직접 대화를 권장한다.
+- **A3.** 환자 편을 들어 함께 배우자를 강하게 비난한다.
+- **A4.** 환자의 모든 불평을 사실로 받아들이고 가족 갈등 개입을 자청한다.
+- **A5.** 불평을 듣는 것을 일체 거부하여 진료 흐름을 유지한다.
+
+**ANSWER:** A2
+
+**EXPLANATION:**
+**[핵심 논리]** 삼각관계는 의사가 환자·가족 갈등 사이의 세 번째 꼭짓점이 되어 갈등을 흡수하는 구조다. 의사가 이 위치에 들어가는 순간 객관성과 치료적 위치를 모두 잃는다.
+
+**[정답 근거]** 삼각관계 회피와 직접 대화 권장이 표준 대응이다.
+
+**[오답 함정]** A1은 의사의 부적절한 가족 개입. A3은 객관성 상실. A4는 삼각관계 자청. A5는 환자의 정서적 호소를 묵살하는 반대 방향의 오류.
+
+**[원리]** 환자-가족 갈등에서 의사 위치는 매개자가 아니라 직접 대화 촉진자다.
+
+---
+
+### ID: Q50
+### TAGS: 환자 상담 / 정서적 고통
+
+**Q.** 유방절제술 직후 환자가 정서적으로 매우 힘들어하며 자신의 변화된 신체에 대한 슬픔을 표현한다. 가장 적절한 대응은?
+
+- **A1.** "다행히 수술이 잘 되었으니 곧 괜찮아질 것"이라고 환자를 안심시킨다.
+- **A2.** 정신과 의뢰가 필요한 우울증으로 즉시 진단하고 약물치료를 시작한다.
+- **A3.** 같은 수술을 받은 다른 환자의 사례를 자세히 비교하여 설명한다.
+- **A4.** 가족이 환자를 돌볼 책임이라며 이후 진료를 가족에게 위임한다.
+- **A5.** 환자의 감정을 validate하고 피상적 안심(reassurance)을 피한다.
+
+**ANSWER:** A5
+
+**EXPLANATION:**
+**[핵심 논리]** 정서적 고통에 대한 의학적 대응의 표준은 감정 인정(validation)이지 피상적 안심(superficial reassurance)이 아니다. 안심은 종종 환자의 감정을 부정하는 효과를 낳는다.
+
+**[정답 근거]** Validate와 피상적 안심 회피. 환자가 자신의 슬픔을 정상적인 반응으로 인식할 수 있도록 한다.
+
+**[오답 함정]** A1·A3은 피상적 안심·비교의 전형 — 환자의 슬픔을 상대화하여 부정한다. A2는 정상 반응을 병리화하는 함정. A5는 의사 역할 회피.
+
+**[원리]** 정서적 고통 대응에서 Validation은 Reassurance보다 우선한다.
+
+</script>
+
+<!-- ============================================================
+     모듈 스크립트
+     ============================================================ -->
+<script>
+'use strict';
+
+// ---------------------------------------------------------------
+// 1. MD Parser
+// ---------------------------------------------------------------
+function parseQuizMarkdown(md) {
+  const questions = [];
+  
+  // 문서 제목 (# 으로 시작하는 첫 줄)
+  const titleMatch = md.match(/^#\s+(.+)$/m);
+  const docTitle = titleMatch ? titleMatch[1].trim() : 'Quiz';
+
+  // 섹션 매핑 — 각 문제 ID가 어느 SECTION에 속하는지 추적
+  const sectionMap = {};
+  const sectionOrder = [];
+  {
+    const lines = md.split('\n');
+    let activeSection = null;
+    for (const line of lines) {
+      const secMatch = line.match(/^##\s+SECTION:\s*(.+)$/);
+      if (secMatch) {
+        activeSection = secMatch[1].trim();
+        if (!sectionOrder.includes(activeSection)) sectionOrder.push(activeSection);
+        continue;
+      }
+      const idMatch = line.match(/^###\s+ID:\s*(\S+)/);
+      if (idMatch) sectionMap[idMatch[1]] = activeSection;
+    }
+  }
+
+  // 각 문제 블록 = "### ID:" 로 시작
+  const blocks = md.split(/^### ID:\s*/gm).slice(1);
+
+  for (const block of blocks) {
+    const idMatch = block.match(/^(\S+)/);
+    if (!idMatch) continue;
+    const id = idMatch[1];
+
+    const tagsMatch = block.match(/^###\s+TAGS:\s*(.+)$/m);
+    const tags = tagsMatch
+      ? tagsMatch[1].split(/[\/·]/).map(t => t.trim()).filter(Boolean)
+      : [];
+
+    const flagsMatch = block.match(/^###\s+FLAGS:\s*(.+)$/m);
+    const flags = flagsMatch
+      ? flagsMatch[1].split(/[,\s/]+/).map(f => f.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    const qMatch = block.match(/\*\*Q\.\*\*\s*([\s\S]*?)(?=\n-\s*\*\*A1\.\*\*)/);
+    const prompt = qMatch ? qMatch[1].trim() : '';
+
+    // 선지 최대 9개까지 지원
+    const choices = [];
+    for (let i = 1; i <= 9; i++) {
+      const next = i + 1;
+      const re = new RegExp(
+        `-\\s*\\*\\*A${i}\\.\\*\\*\\s*([\\s\\S]*?)(?=\\n-\\s*\\*\\*A${next}\\.\\*\\*|\\n\\n\\*\\*ANSWER)`
+      );
+      const m = block.match(re);
+      if (m) choices.push(m[1].trim()); else break;
+    }
+
+    const ansMatch = block.match(/\*\*ANSWER:\*\*\s*A(\d)/);
+    const answer = ansMatch ? parseInt(ansMatch[1], 10) : 0;
+
+    const explMatch = block.match(/\*\*EXPLANATION:\*\*\s*([\s\S]*?)$/);
+    const explanation = explMatch ? explMatch[1].trim() : '';
+
+    questions.push({
+      id, tags, flags, prompt, choices, answer, explanation,
+      section: sectionMap[id] || null,
+    });
+  }
+
+  return { docTitle, sectionOrder, questions };
+}
+
+// ---------------------------------------------------------------
+// 2. Inline MD → HTML
+//    - **bold** → <strong>
+//    - *italic* → <em> (시각적으로는 normal로 무효화됨)
+//    - tables
+// ---------------------------------------------------------------
+function renderInline(text) {
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 테이블 처리
+  html = html.replace(
+    /(?:^\|.+\|\s*\n)+/gm,
+    (table) => {
+      const rows = table.trim().split('\n').map(r =>
+        r.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim())
+      );
+      const isSep = (row) => row.every(c => /^[-:]+$/.test(c));
+      let header = null;
+      let body = rows;
+      if (rows.length >= 2 && isSep(rows[1])) {
+        header = rows[0];
+        body = rows.slice(2);
+      }
+      const headerHtml = header
+        ? '<thead><tr>' + header.map(c => `<th>${c}</th>`).join('') + '</tr></thead>'
+        : '';
+      const bodyHtml = '<tbody>' +
+        body.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('') +
+        '</tbody>';
+      return `<table>${headerHtml}${bodyHtml}</table>\n`;
+    }
+  );
+
+  html = html
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+
+  html = html.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>');
+  return html;
+}
+
+// 해설 본문은 [라벨] 블록으로 분할
+function renderExplanation(text) {
+  const parts = text.split(/\*\*\[(.+?)\]\*\*/);
+  if (parts.length < 3) {
+    return `<div class="block"><p>${renderInline(text)}</p></div>`;
+  }
+  let out = '';
+  for (let i = 1; i < parts.length; i += 2) {
+    const label = parts[i];
+    const body = parts[i + 1] || '';
+    // 라벨에 함정/오답/매력 등이 들어가면 점토색
+    const isTrap = /오답|함정|매력|주의|오류|반례|예외/.test(label);
+    out += `
+      <div class="block">
+        <div class="block-label ${isTrap ? 'is-trap' : ''}">${label}</div>
+        <p>${renderInline(body.trim())}</p>
+      </div>
+    `;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------
+// 3. State
+// ---------------------------------------------------------------
+const state = {
+  docTitle: '',
+  sectionOrder: [],   // ['기본', '실험', ...] 또는 [] (섹션 없음)
+  allQuestions: [],
+  filtered: [],
+  currentIdx: 0,
+  filter: 'all',
+  // id → { picked, checked, correct }
+  results: {},
+};
+
+// ---------------------------------------------------------------
+// 4. Renderers
+// ---------------------------------------------------------------
+function renderToolbar() {
+  const toolbar = document.getElementById('toolbar');
+  const group = document.getElementById('filterGroup');
+  
+  // 섹션이 없거나 하나뿐이면 필터 숨김
+  if (state.sectionOrder.length <= 1) {
+    toolbar.classList.add('is-hidden');
+    return;
+  }
+  toolbar.classList.remove('is-hidden');
+
+  // 필터 핀 동적 생성
+  group.innerHTML = '<span class="filter-label">섹션</span>';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-pill is-active';
+  allBtn.setAttribute('data-filter', 'all');
+  allBtn.textContent = '전체';
+  group.appendChild(allBtn);
+
+  for (const sec of state.sectionOrder) {
+    const btn = document.createElement('button');
+    btn.className = 'filter-pill';
+    btn.setAttribute('data-filter', sec);
+    btn.textContent = sec;
+    group.appendChild(btn);
+  }
+
+  group.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('is-active'));
+      pill.classList.add('is-active');
+      applyFilter(pill.getAttribute('data-filter'));
+    });
+  });
+}
+
+function renderProgressBar() {
+  const total = state.filtered.length;
+  const answered = state.filtered.filter(q => {
+    const r = state.results[q.id];
+    return r && r.checked;
+  }).length;
+  const position = total > 0 ? state.currentIdx + 1 : 0;
+  const pct = total > 0 ? (answered / total) * 100 : 0;
+
+  document.getElementById('progressBarFill').style.width = `${pct}%`;
+  document.getElementById('progressBarLabel').innerHTML =
+    `<strong>${answered}</strong> / ${total} 완료`;
+  document.getElementById('progressBarPosition').innerHTML =
+    `<strong>Q${position}</strong>`;
+}
+
+function renderProgress() {
+  const totalChecked = Object.values(state.results).filter(r => r.checked).length;
+  const totalCorrect = Object.values(state.results).filter(r => r.correct).length;
+  const total = state.allQuestions.length;
+  
+  document.getElementById('progressMeta').innerHTML =
+    `<strong>${totalCorrect}</strong> / ${totalChecked} 정답  ·  전체 ${total}문항`;
+  
+  // 헤더 메타 — 섹션이 있으면 섹션별 카운트 표시
+  let metaText = `총 ${total}문항`;
+  if (state.sectionOrder.length > 1) {
+    const counts = state.sectionOrder
+      .map(s => `${s} ${state.allQuestions.filter(q => q.section === s).length}`)
+      .join(' · ');
+    metaText += ` (${counts})`;
+  }
+  document.getElementById('totalMeta').textContent = metaText;
+}
+
+function renderQuestion() {
+  const root = document.getElementById('quizRoot');
+  if (state.filtered.length === 0) {
+    root.innerHTML = '<div class="loading">표시할 문제가 없어요.</div>';
+    return;
+  }
+  const q = state.filtered[state.currentIdx];
+  const result = state.results[q.id] || { picked: 0, checked: false, correct: false };
+  
+  const isFlagged = q.flags && q.flags.includes('highlight');
+
+  const tagsHtml = q.tags.map(t => `<span class="q-tag">${t}</span>`).join('');
+
+  // 섹션 표시 — 섹션이 있을 때만
+  const sectionMarkHtml = q.section
+    ? `<span class="q-section-mark ${isFlagged ? 'has-flag' : ''}">${q.section}</span>`
+    : '';
+
+  const choicesHtml = q.choices.map((c, i) => {
+    const n = i + 1;
+    let cls = 'choice';
+    if (!result.checked && result.picked === n) cls += ' is-selected';
+    if (result.checked) {
+      cls += ' is-disabled';
+      if (n === q.answer) cls += ' is-correct-answer';
+      else if (n === result.picked) cls += ' is-wrong-pick';
+    }
+    return `
+      <div class="${cls}" data-choice="${n}">
+        <div class="choice-radio"></div>
+        <div class="choice-marker">${n}.</div>
+        <div class="choice-text">${renderInline(c)}</div>
+      </div>
+    `;
+  }).join('');
+
+  let explanationHtml = '';
+  if (result.checked) {
+    const verdict = result.correct
+      ? `<div class="explanation-verdict is-correct">정답이에요.</div>`
+      : `<div class="explanation-verdict is-incorrect">정답은 ${q.answer}번이에요.</div>`;
+    explanationHtml = `
+      <div class="explanation">
+        <div class="explanation-eyebrow">해설</div>
+        ${verdict}
+        <div class="explanation-body">
+          ${renderExplanation(q.explanation)}
+        </div>
+      </div>
+    `;
+  }
+
+  root.innerHTML = `
+    <div class="q-card ${isFlagged ? 'is-flagged' : ''}">
+      <div class="q-header">
+        <div class="q-id-row">
+          <span class="q-id">Q${state.currentIdx + 1}</span>
+          ${sectionMarkHtml}
+        </div>
+        <div class="q-tags">${tagsHtml}</div>
+      </div>
+
+      <div class="q-prompt">${renderInline(q.prompt)}</div>
+
+      <div class="choices">${choicesHtml}</div>
+
+      <div class="action-row">
+        <div class="action-left">
+          <button class="btn-secondary" id="prevBtn" ${state.currentIdx === 0 ? 'disabled' : ''}>이전</button>
+          <button class="btn-secondary" id="nextBtn" ${state.currentIdx === state.filtered.length - 1 ? 'disabled' : ''}>다음</button>
+        </div>
+        <div class="action-right">
+          ${result.checked
+            ? `<button class="btn-secondary" id="retryBtn">다시 풀기</button>`
+            : `<button class="btn-primary" id="checkBtn" ${result.picked ? '' : 'disabled'}>확인</button>`}
+        </div>
+      </div>
+
+      ${explanationHtml}
+    </div>
+  `;
+
+  if (!result.checked) {
+    root.querySelectorAll('.choice').forEach(el => {
+      el.addEventListener('click', () => {
+        const n = parseInt(el.getAttribute('data-choice'), 10);
+        state.results[q.id] = { picked: n, checked: false, correct: false };
+        renderAll();
+      });
+    });
+    const checkBtn = document.getElementById('checkBtn');
+    if (checkBtn) checkBtn.addEventListener('click', () => checkCurrent());
+  } else {
+    const retryBtn = document.getElementById('retryBtn');
+    if (retryBtn) retryBtn.addEventListener('click', () => {
+      delete state.results[q.id];
+      renderAll();
+    });
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (state.currentIdx > 0) { state.currentIdx--; renderAll(); }
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (state.currentIdx < state.filtered.length - 1) { state.currentIdx++; renderAll(); }
+  });
+}
+
+function checkCurrent() {
+  const q = state.filtered[state.currentIdx];
+  const r = state.results[q.id];
+  if (!r || !r.picked) return;
+  state.results[q.id] = {
+    picked: r.picked,
+    checked: true,
+    correct: r.picked === q.answer,
+  };
+  renderAll();
+  setTimeout(() => {
+    const expl = document.querySelector('.explanation');
+    if (expl) expl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+}
+
+function renderAll() {
+  renderProgressBar();
+  renderQuestion();
+  renderProgress();
+}
+
+function applyFilter(filter) {
+  state.filter = filter;
+  state.filtered = filter === 'all'
+    ? state.allQuestions
+    : state.allQuestions.filter(q => q.section === filter);
+  state.currentIdx = 0;
+  renderAll();
+}
+
+// ---------------------------------------------------------------
+// 5. Init
+// ---------------------------------------------------------------
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const externalUrl = params.get('md');
+
+  let md = '';
+  if (externalUrl) {
+    try {
+      const res = await fetch(externalUrl);
+      md = await res.text();
+    } catch (e) {
+      console.warn('외부 MD 로드 실패, 임베드 데이터로 폴백:', e);
+      md = document.getElementById('quizData').textContent;
+    }
+  } else {
+    md = document.getElementById('quizData').textContent;
+  }
+
+  const parsed = parseQuizMarkdown(md);
+  state.docTitle = parsed.docTitle;
+  state.sectionOrder = parsed.sectionOrder;
+  state.allQuestions = parsed.questions;
+  
+  document.getElementById('appTitle').textContent = state.docTitle;
+  document.title = state.docTitle;
+
+  renderToolbar();
+  applyFilter('all');
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('모든 응답을 초기화해요. 진행할까요?')) {
+      state.results = {};
+      state.currentIdx = 0;
+      renderAll();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowLeft' && state.currentIdx > 0) {
+      state.currentIdx--; renderAll();
+    } else if (e.key === 'ArrowRight' && state.currentIdx < state.filtered.length - 1) {
+      state.currentIdx++; renderAll();
+    } else if (/^[1-9]$/.test(e.key)) {
+      const q = state.filtered[state.currentIdx];
+      const r = state.results[q.id];
+      if (!r || !r.checked) {
+        const n = parseInt(e.key, 10);
+        if (n <= q.choices.length) {
+          state.results[q.id] = { picked: n, checked: false, correct: false };
+          renderAll();
+        }
+      }
+    } else if (e.key === 'Enter') {
+      const q = state.filtered[state.currentIdx];
+      const r = state.results[q.id];
+      if (r && r.picked && !r.checked) checkCurrent();
+    }
+  });
+}
+
+init();
+</script>
+
+</body>
+</html>
